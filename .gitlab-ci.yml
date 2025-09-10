@@ -1,0 +1,14 @@
+include:
+  - project: 'dti/agd/templates/ci-templates-javascript'
+    ref: master
+    file: 'nest.yml'
+
+variables: 
+  AUTOMATIC_DEPLOYMENT_ON_QA: "true"
+  NODE_VERSION: "20"
+
+deploy:qa:
+  environment: qas
+
+deploy:prd:
+  environment: prd
