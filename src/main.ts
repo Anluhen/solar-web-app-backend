@@ -31,6 +31,14 @@ async function bootstrap() {
             .forEach((server) => swaggerConfig.addServer(server));
     }
 
+    // Register a simple GET handler for /api to return a basic message.
+    // This is placed before Swagger is mounted so a plain "Hello World!" is
+    // returned when the browser visits /api.
+    const server = app.getHttpAdapter().getInstance() as any;
+    server.get("/api", (_req: any, res: any) => {
+        res.send("Hello World!");
+    });
+
     const document = SwaggerModule.createDocument(app, swaggerConfig.build(), {
         extraModels: [ItemEntity],
     });
