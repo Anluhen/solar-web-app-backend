@@ -21,7 +21,7 @@ const PostgresModule = TypeOrmModule.forRootAsync({
             ENV_VARIABLE_NAMES.POSTGRESQL_PASSWORD,
         ),
         database: configService.getOrThrow(ENV_VARIABLE_NAMES.POSTGRESQL_NAME),
-        entities: [StaffEntity],
+        autoLoadEntities: true,
         synchronize: true,
     }),
 });
