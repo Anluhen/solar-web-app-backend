@@ -8,7 +8,7 @@ import {
   Check,
   Index,
 } from 'typeorm';
-import MaterialOrmEntity from '../../materiais/entities/material.orm-entity';
+import MaterialEntity from '../../materiais/entities/material.entity';
 
 export enum StatusEnvio {
   RASCUNHO = 'RASCUNHO',
@@ -50,6 +50,6 @@ export default class Envio {
   @Column({ type: 'date', default: () => 'CURRENT_DATE' })
   separacao!: string; // keep as string (YYYY-MM-DD) or use Date if you prefer
 
-  @OneToMany(() => MaterialOrmEntity, (m) => m.envio)
-  materiais?: MaterialOrmEntity[];
+  @OneToMany(() => MaterialEntity, (m) => m.envio)
+  materiais?: MaterialEntity[];
 }

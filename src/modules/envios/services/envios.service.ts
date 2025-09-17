@@ -3,14 +3,14 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import EnvioEntity from "../entities/envio.entity";
 import EnvioFormDto from "../dtos/envio-form.dto";
-import MaterialOrmEntity from "../../materiais/entities/material.orm-entity";
+import MaterialEntity from "../../materiais/entities/material.entity";
 import { IEnviosService } from "../interfaces/envios.service.interface";
 
 @Injectable()
 class EnviosService implements IEnviosService {
   constructor(
     @InjectRepository(EnvioEntity, "postgreConnection") private readonly repo: Repository<EnvioEntity>,
-    @InjectRepository(MaterialOrmEntity, "postgreConnection") private readonly matRepo: Repository<MaterialOrmEntity>,
+    @InjectRepository(MaterialEntity, "postgreConnection") private readonly matRepo: Repository<MaterialEntity>,
   ) { }
 
   async postEnvio(dto: EnvioFormDto): Promise<EnvioEntity> {

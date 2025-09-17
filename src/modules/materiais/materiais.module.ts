@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import MaterialOrmEntity from './entities/material.orm-entity';
+import MaterialEntity from './entities/material.entity';
 import Envio from '../envios/entities/envio.entity';
 import materiaisServiceProvider from './services/materiais.service';
 import { MateriaisController } from './controllers/materiais.controller';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([MaterialOrmEntity, Envio], 'postgreConnection')],
+  imports: [TypeOrmModule.forFeature([MaterialEntity, Envio], 'postgreConnection')],
   controllers: [MateriaisController],
   providers: [materiaisServiceProvider],
   exports: [TypeOrmModule, materiaisServiceProvider],

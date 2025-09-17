@@ -68,23 +68,14 @@ export class EnviosController {
   @ApiOkResponse({ type: EnvioEntity })
   async deleteEnvio(
     @Param('id', ParseIntPipe) id: number
-  ):Promise<EnvioEntity> {
+  ): Promise<EnvioEntity> {
     return this.enviosService.deleteEnvio(id);
   }
 
   @Get(':id/materiais')
   @ApiOkResponse({ type: MaterialEntity, isArray: true })
   async findMateriaisByEnvio(@Param('id', ParseIntPipe) id: number
-  ):Promise<MaterialEntity[]> {
-    const materiais = await this.materiaisService.findByEnvio(id);
-    return (materiais.map((m: any) => ({
-      id: Number(m.id),
-      envio_id: Number(id),
-      sap: m.sap !== undefined && m.sap !== null ? Number(m.sap) : 0,
-      descricao: m.descricao,
-      quantidade: Number(m.quantidade),
-      created_at: m.created_at,
-      updated_at: m.updated_at,
-    })) as unknown) as MaterialEntity[];
+  ): Promise<MaterialEntity[]> {
+    return this.materiaisService.getMateriaisByEnvio(String(id));
   }
 }
