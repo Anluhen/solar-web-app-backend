@@ -8,7 +8,7 @@ import {
   Check,
   Index,
 } from 'typeorm';
-import { Material } from '../../materiais/entities/material.entity';
+import MaterialOrmEntity from '../../materiais/entities/material.orm-entity';
 
 export enum StatusEnvio {
   RASCUNHO = 'RASCUNHO',
@@ -21,7 +21,7 @@ export enum StatusEnvio {
 @Index('envios_gerador_idx', ['gerador'])
 @Index('envios_pep_idx', ['pep'])
 @Index('envios_zvgp_idx', ['zvgp'])
-export class Envio {
+export default class Envio {
   // bigint -> prefer string in TS to avoid precision loss
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id!: string;
@@ -50,6 +50,6 @@ export class Envio {
   @Column({ type: 'date', default: () => 'CURRENT_DATE' })
   separacao!: string; // keep as string (YYYY-MM-DD) or use Date if you prefer
 
-  @OneToMany(() => Material, (m) => m.envio)
-  materiais?: Material[];
+  @OneToMany(() => MaterialOrmEntity, (m) => m.envio)
+  materiais?: MaterialOrmEntity[];
 }

@@ -1,41 +1,35 @@
-import {
-  Entity,
-  PrimaryGeneratedColumn,
-  Column,
-  ManyToOne,
-  JoinColumn,
-  CreateDateColumn,
-  UpdateDateColumn,
-} from 'typeorm';
-import { Envio } from '../../envios/entities/envio.entity';
+import { ApiProperty } from "@nestjs/swagger";
+import { IsDate, IsInt, IsNotEmpty, IsNumber, IsOptional, IsString } from "class-validator";
 
-@Entity('materiais')
-export class Material {
-  @PrimaryGeneratedColumn({ type: 'bigint' })
-  id!: string;
+export default class MaterialEntity {
+  @ApiProperty({ required: true })
+  @IsNumber()
+  @IsNotEmpty()
+  id!: number;
 
-  // nullable in DB; ON DELETE CASCADE from schema
-  @ManyToOne(() => Envio, (e) => e.materiais, {
-    onDelete: 'CASCADE',
-    nullable: true,
-  })
-  @JoinColumn({ name: 'envio_id' })
-  envio?: Envio | null;
+  @ApiProperty({ required: false, description: "Envio id (if any)" })
+  @IsOptional()
+  @IsNumber()
+  envio_id?: number;
 
-  @Column({
-    type: 'bigint',
-  })
-  sap!: string;
+  @ApiProperty({ required: true })
+  @IsNumber()
+  sap!: number;
 
-  @Column({ type: 'text' })
+  @ApiProperty({ required: true })
+  @IsString()
+  @IsNotEmpty()
   descricao!: string;
 
-  @Column({ type: 'integer' })
+  @ApiProperty({ required: true })
+  @IsInt()
   quantidade!: number;
 
-  @CreateDateColumn({ type: 'timestamptz', default: () => 'now()' })
+  @ApiProperty({ required: true })
+  @IsDate()
   created_at!: Date;
 
-  @UpdateDateColumn({ type: 'timestamptz', default: () => 'now()' })
+  @ApiProperty({ required: true })
+  @IsDate()
   updated_at!: Date;
 }

@@ -1,7 +1,12 @@
+import { ApiProperty } from "@nestjs/swagger";
 import { IsEnum, IsNotEmpty, IsOptional, IsString } from 'class-validator';
 import { StatusEnvio } from '../entities/envio.entity';
 
-export class CreateEnvioDto {
+export default class EnvioFormDto {
+  @ApiProperty({
+    required: true,
+  })
+    
   @IsString()
   @IsNotEmpty()
   pep!: string;

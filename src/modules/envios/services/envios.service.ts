@@ -1,32 +1,28 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Envio } from '../entities/envio.entity';
-import { CreateEnvioDto } from '../dtos/create-envio.dto';
-import { UpdateEnvioDto } from '../dtos/update-envio.dto';
-import { Material } from '../../materiais/entities/material.entity';
+import { ClassProvider, Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import EnvioEntity from "../entities/envio.entity";
+import EnvioFormDto from "../dtos/envio-form.dto";
+import MaterialOrmEntity from "../../materiais/entities/material.orm-entity";
+import { IEnviosService } from "../interfaces/envios.service.interface";
 
 @Injectable()
-export class EnviosService {
+class EnviosService implements IEnviosService {
   constructor(
-    @InjectRepository(Envio, 'postgreConnection') private readonly repo: Repository<Envio>,
-    @InjectRepository(Material, 'postgreConnection') private readonly matRepo: Repository<Material>,
+    @InjectRepository(EnvioEntity, "postgreConnection") private readonly repo: Repository<EnvioEntity>,
+    @InjectRepository(MaterialOrmEntity, "postgreConnection") private readonly matRepo: Repository<MaterialOrmEntity>,
   ) { }
 
-  async create(dto: CreateEnvioDto) {
+  async postEnvio(dto: EnvioFormDto): Promise<EnvioEntity> {
     const envio = this.repo.create(dto);
     return this.repo.save(envio);
   }
 
-  findAll(opts?: {
-    withMateriais?: boolean,
-    filters?: { id?: string; pep?: string; zvgp?: string; gerador?: string }
-  }) {
+  getEnvios(opts?: {
+    filters?: { id?: string; pep?: string; zvgp?: string; gerador?: string };
+    withMateriais?: boolean;
+  }): Promise<EnvioEntity[]> {
     const qb = this.repo.createQueryBuilder('envio');
-
-    if (opts?.withMateriais) {
-      qb.leftJoinAndSelect('envio.materiais', 'materiais');
-    }
 
     const f = opts?.filters ?? {};
 
@@ -43,28 +39,37 @@ export class EnviosService {
       qb.andWhere('envio.gerador ILIKE :gerador', { gerador: `%${f.gerador.trim()}%` });
     }
 
-    qb.orderBy('envio.id', 'DESC');
+    if (opts?.withMateriais) {
+      qb.leftJoinAndSelect('envio.materiais', 'materiais');
+    }
+
+    qb.orderBy('envio.id', 'ASC');
     return qb.getMany();
   }
 
-  async findOne(id: string, opts?: { withMateriais?: boolean }) {
-    const relations = opts?.withMateriais ? { materiais: true } : undefined;
-    const envio = await this.repo.findOne({ where: { id }, relations });
+  async getEnvio(id: number): Promise<EnvioEntity> {
+    const envio = await this.repo.findOne({ where: { id: String(id) } });
     if (!envio) throw new NotFoundException(`Envio ${id} not found`);
     return envio;
   }
 
-  async update(id: string, dto: UpdateEnvioDto) {
-    const entity = await this.repo.preload({ id, ...dto });
+  async putEnvio(id: number, dto: EnvioFormDto): Promise<EnvioEntity> {
+    const entity = await this.repo.preload({ id: String(id), ...dto });
     if (!entity) throw new NotFoundException(`Envio ${id} not found`);
     return this.repo.save(entity);
   }
 
-  async remove(id: string) {
-    const entity = await this.repo.findOne({ where: { id } });
+  async deleteEnvio(id: number): Promise<EnvioEntity> {
+    const entity = await this.repo.findOne({ where: { id: String(id) } });
     if (!entity) throw new NotFoundException(`Envio ${id} not found`);
-    // ON DELETE CASCADE will remove materiais automatically
     await this.repo.remove(entity);
-    return { deleted: true, id };
+    return entity;
   }
 }
+
+const enviosServiceProvider: ClassProvider<IEnviosService> = {
+  provide: IEnviosService,
+  useClass: EnviosService,
+};
+
+export default enviosServiceProvider;

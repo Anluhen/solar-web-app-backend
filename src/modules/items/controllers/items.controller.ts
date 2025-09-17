@@ -7,12 +7,12 @@ import {
     ParseIntPipe,
     Post,
     Put,
-    UseGuards,
 } from "@nestjs/common";
 import ItemFormDto from "../dtos/item-form.dto";
 import ItemEntity from "../entities/item.entity";
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { IItemsService } from "../interfaces/items.service.interface";
+
 @Controller("api/items")
 @ApiTags("Items")
 export class ItemsController {

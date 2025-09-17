@@ -1,50 +1,57 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
+  Controller,
   DefaultValuePipe,
+  Delete,
+  Get,
+  Param,
+  Put,
+  Post,
+  Query,
   ParseBoolPipe,
-} from '@nestjs/common';
-import { MateriaisService } from '../services/materiais.service';
-import { CreateMaterialDto } from '../dtos/create-material.dto';
-import { UpdateMaterialDto } from '../dtos/update-material.dto';
+} from "@nestjs/common";
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { IMateriaisService } from "../interfaces/materiais.service.interface";
+import MaterialFormDto from "../dtos/material-form.dto";
+import MaterialEntity from "../entities/material.entity";
 
-@Controller('materiais')
+@Controller("api/materiais")
+@ApiTags("Materiais")
 export class MateriaisController {
-  constructor(private readonly materiaisService: MateriaisService) { }
+  constructor(private readonly materiaisService: IMateriaisService) { }
 
   @Post()
-  create(@Body() dto: CreateMaterialDto) {
-    return this.materiaisService.create(dto);
+  @ApiCreatedResponse({ type: MaterialEntity })
+  async postMaterial(@Body() material: MaterialFormDto): Promise<MaterialEntity> {
+    return this.materiaisService.postMaterial(material);
   }
 
   @Get()
-  findAll(
-    @Query('withEnvio', new DefaultValuePipe('false'), ParseBoolPipe) withEnvio: boolean,
-  ) {
-    return this.materiaisService.findAll({ withEnvio });
+  @ApiOkResponse({ type: MaterialEntity, isArray: true })
+  async getMateriais(
+    @Query("withEnvio", new DefaultValuePipe("false"), ParseBoolPipe) withEnvio: boolean,
+  ): Promise<MaterialEntity[]> {
+    return this.materiaisService.getMateriais({ withEnvio });
   }
 
   @Get(':id')
-  findOne(
+  @ApiOkResponse({ type: MaterialEntity })
+  async getMaterial(
     @Param('id') id: string,
     @Query('withEnvio', new DefaultValuePipe('true'), ParseBoolPipe) withEnvio: boolean,
-  ) {
-    return this.materiaisService.findOne(id, { withEnvio });
+  ): Promise<MaterialEntity> {
+    return this.materiaisService.getMaterial(id, { withEnvio });
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateMaterialDto) {
-    return this.materiaisService.update(id, dto);
+  @Put(':id')
+  @ApiOkResponse({ type: MaterialEntity })
+  async putMaterial(@Param('id') id: string, @Body() newMaterial: MaterialFormDto): Promise<MaterialEntity> {
+    return this.materiaisService.putMaterial(id, newMaterial);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.materiaisService.remove(id);
+  @ApiOkResponse({ schema: { properties: { deleted: { type: 'boolean' }, id: { type: 'string' } } } })
+  async deleteMaterial(@Param('id') id: string): Promise<{ deleted: boolean; id: string }> {
+    return this.materiaisService.deleteMaterial(id);
   }
 }

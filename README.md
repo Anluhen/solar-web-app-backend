@@ -20,9 +20,7 @@ run the development server:
 npm run start:dev
 ```
 
-The API will be available at [http://localhost:3000/api](http://localhost:3000/api).
-
-> You can find the docs at [http://localhost:3000/api](http://localhost:3000/api)
+The API will be available at [http://localhost:3000/api](http://localhost:3000/api) or [http://localhost:3001](http://localhost:3001).
 
 ## Learn More
 

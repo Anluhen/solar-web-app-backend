@@ -1,58 +1,83 @@
 import {
-  Controller,
-  Get,
-  Post,
   Body,
-  Patch,
-  Param,
-  Delete,
-  Query,
+  Controller,
   DefaultValuePipe,
+  Delete,
+  Get,
+  Param,
   ParseBoolPipe,
-} from '@nestjs/common';
-import { EnviosService } from '../services/envios.service';
-import { CreateEnvioDto } from '../dtos/create-envio.dto';
-import { UpdateEnvioDto } from '../dtos/update-envio.dto';
-import { MateriaisService } from '../../materiais/services/materiais.service';
+  ParseIntPipe,
+  Post,
+  Put,
+  Query,
+} from "@nestjs/common";
+import EnvioFormDto from "../dtos/envio-form.dto";
+import EnvioEntity from "../entities/envio.entity";
+import MaterialEntity from "../../materiais/entities/material.entity";
+import { ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
+import { IEnviosService } from "../interfaces/envios.service.interface";
+import { IMateriaisService } from "../../materiais/interfaces/materiais.service.interface";
 
 @Controller('envios')
+@ApiTags("Envios")
 export class EnviosController {
   constructor(
-    private readonly enviosService: EnviosService,
-    private readonly materiaisService: MateriaisService,
+    private readonly enviosService: IEnviosService,
+    private readonly materiaisService: IMateriaisService,
   ) { }
 
   @Post()
-  create(@Body() dto: CreateEnvioDto) {
-    return this.enviosService.create(dto);
+  @ApiCreatedResponse({ type: EnvioEntity })
+  postEnvio(
+    @Body() envio: EnvioFormDto
+  ): Promise<EnvioEntity> {
+    return this.enviosService.postEnvio(envio);
   }
 
   @Get()
-  findAll(
+  @ApiOkResponse({ type: EnvioEntity, isArray: true })
+  getEnvios(
     @Query('withMateriais', new DefaultValuePipe('false'), ParseBoolPipe) withMateriais: boolean,
     @Query('id') id?: string,
     @Query('pep') pep?: string,
     @Query('zvgp') zvgp?: string,
     @Query('gerador') gerador?: string,
-  ) {
-    return this.enviosService.findAll({
-      withMateriais,
-      filters: { id, pep, zvgp, gerador },
-    });
+  ): Promise<EnvioEntity[]> {
+    return this.enviosService.getEnvios({ filters: { id, pep, zvgp, gerador }, withMateriais });
+  }
+
+  @Put(":id")
+  @ApiOkResponse({ type: EnvioEntity })
+  async putEnvio(
+    @Param("id", ParseIntPipe) id: number,
+    @Body() envio: EnvioFormDto,
+  ): Promise<EnvioEntity> {
+    return this.enviosService.putEnvio(id, envio);
   }
 
   @Get(':id')
-  findOne(
-    @Param('id') id: string,
+  @ApiOkResponse({ type: EnvioEntity })
+  async getEnvio(
+    @Param('id', ParseIntPipe) id: number,
     @Query('withMateriais', new DefaultValuePipe('true'), ParseBoolPipe) withMateriais: boolean,
-  ) {
-    return this.enviosService.findOne(id, { withMateriais });
+  ): Promise<EnvioEntity> {
+    return this.enviosService.getEnvio(id);
+  }
+
+  @Delete(':id')
+  @ApiOkResponse({ type: EnvioEntity })
+  async deleteEnvio(
+    @Param('id', ParseIntPipe) id: number
+  ):Promise<EnvioEntity> {
+    return this.enviosService.deleteEnvio(id);
   }
 
   @Get(':id/materiais')
-  async findMateriaisByEnvio(@Param('id') id: string) {
-    const list = await this.materiaisService.findByEnvio(id);
-    return list.map((m: any) => ({
+  @ApiOkResponse({ type: MaterialEntity, isArray: true })
+  async findMateriaisByEnvio(@Param('id', ParseIntPipe) id: number
+  ):Promise<MaterialEntity[]> {
+    const materiais = await this.materiaisService.findByEnvio(id);
+    return (materiais.map((m: any) => ({
       id: Number(m.id),
       envio_id: Number(id),
       sap: m.sap !== undefined && m.sap !== null ? Number(m.sap) : 0,
@@ -60,16 +85,6 @@ export class EnviosController {
       quantidade: Number(m.quantidade),
       created_at: m.created_at,
       updated_at: m.updated_at,
-    }));
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() dto: UpdateEnvioDto) {
-    return this.enviosService.update(id, dto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.enviosService.remove(id);
+    })) as unknown) as MaterialEntity[];
   }
 }

@@ -1,57 +1,73 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
-import { Material } from '../entities/material.entity';
-import { CreateMaterialDto } from '../dtos/create-material.dto';
-import { UpdateMaterialDto } from '../dtos/update-material.dto';
-import { Envio } from '../../envios/entities/envio.entity';
+import { ClassProvider, Injectable, NotFoundException } from "@nestjs/common";
+import { InjectRepository } from "@nestjs/typeorm";
+import { Repository } from "typeorm";
+import MaterialEntity from "../entities/material.entity";
+import MaterialOrmEntity from "../entities/material.orm-entity";
+import MaterialFormDto from "../dtos/material-form.dto";
+import Envio from "../../envios/entities/envio.entity";
+import { IMateriaisService } from "../interfaces/materiais.service.interface";
 
 @Injectable()
-export class MateriaisService {
+class MateriaisService implements IMateriaisService {
   constructor(
-    @InjectRepository(Material, 'postgreConnection') private readonly repo: Repository<Material>,
-    @InjectRepository(Envio, 'postgreConnection') private readonly envioRepo: Repository<Envio>,
+    @InjectRepository(MaterialOrmEntity, "postgreConnection") private readonly repo: Repository<MaterialOrmEntity>,
+    @InjectRepository(Envio, "postgreConnection") private readonly envioRepo: Repository<Envio>,
   ) { }
 
-  async create(dto: CreateMaterialDto) {
+  private toDto(entity: MaterialOrmEntity): MaterialEntity {
+    return {
+      id: Number(entity.id),
+      envio_id: entity.envio ? Number((entity.envio as any).id) : undefined,
+      sap: entity.sap !== undefined && entity.sap !== null ? Number(entity.sap) : 0,
+      descricao: entity.descricao,
+      quantidade: Number(entity.quantidade),
+      created_at: entity.created_at,
+      updated_at: entity.updated_at,
+    };
+  }
+
+  async postMaterial(materialDto: MaterialFormDto): Promise<MaterialEntity> {
     const material = this.repo.create({
-      descricao: dto.descricao,
-      quantidade: dto.quantidade,
+      descricao: materialDto.descricao,
+      quantidade: materialDto.quantidade,
     });
 
     // optional relation
-    if (dto.envio_id) {
-      const envio = await this.envioRepo.findOne({ where: { id: dto.envio_id } });
-      if (!envio) throw new NotFoundException(`Envio ${dto.envio_id} not found`);
+    if (materialDto.envio_id) {
+      const envio = await this.envioRepo.findOne({ where: { id: materialDto.envio_id } });
+      if (!envio) throw new NotFoundException(`Envio ${materialDto.envio_id} not found`);
       (material as any).envio = envio;
     }
 
     // sap has DB default via sequence; only set if provided
-    if (dto.sap) (material as any).sap = dto.sap;
+    if (materialDto.sap) (material as any).sap = materialDto.sap;
 
-    return this.repo.save(material);
+    const saved = await this.repo.save(material);
+    return this.toDto(saved);
   }
 
-  findAll(opts?: { withEnvio?: boolean }) {
+  async getMateriais(opts?: { withEnvio?: boolean }): Promise<MaterialEntity[]> {
     const relations = opts?.withEnvio ? { envio: true } : undefined;
-    return this.repo.find({ order: { id: 'DESC' }, relations });
+    const list = await this.repo.find({ order: { id: 'DESC' }, relations });
+    return list.map((e) => this.toDto(e));
   }
 
-  findByEnvio(envioId: string) {
-    return this.repo.find({
+  async getMateriaisByEnvio(envioId: number): Promise<MaterialEntity[]> {
+    const list = await this.repo.find({
       where: { envio: { id: envioId } as any },
       order: { id: 'DESC' },
     });
+    return list.map((e) => this.toDto(e));
   }
 
-  async findOne(id: string, opts?: { withEnvio?: boolean }) {
+  async getMaterial(id: string, opts?: { withEnvio?: boolean }): Promise<MaterialEntity> {
     const relations = opts?.withEnvio ? { envio: true } : undefined;
     const material = await this.repo.findOne({ where: { id }, relations });
     if (!material) throw new NotFoundException(`Material ${id} not found`);
-    return material;
+    return this.toDto(material);
   }
 
-  async update(id: string, dto: UpdateMaterialDto) {
+  async putMaterial(id: string, newMaterial: MaterialFormDto): Promise<MaterialEntity> {
     const existing = await this.repo.findOne({
       where: { id },
       relations: { envio: true },
@@ -59,28 +75,36 @@ export class MateriaisService {
     if (!existing) throw new NotFoundException(`Material ${id} not found`);
 
     // Update scalar fields
-    if (dto.descricao !== undefined) existing.descricao = dto.descricao;
-    if (dto.quantidade !== undefined) existing.quantidade = dto.quantidade;
-    if (dto.sap !== undefined) (existing as any).sap = dto.sap;
+    if (newMaterial.descricao !== undefined) existing.descricao = newMaterial.descricao;
+    if (newMaterial.quantidade !== undefined) existing.quantidade = newMaterial.quantidade;
+    if (newMaterial.sap !== undefined) (existing as any).sap = newMaterial.sap;
 
     // Re-point relation if envio_id provided (can set to null)
-    if (dto.envio_id !== undefined) {
-      if (dto.envio_id === null || dto.envio_id === (undefined as any)) {
+    if (newMaterial.envio_id !== undefined) {
+      if (newMaterial.envio_id === null || newMaterial.envio_id === (undefined as any)) {
         (existing as any).envio = null;
       } else {
-        const envio = await this.envioRepo.findOne({ where: { id: dto.envio_id } });
-        if (!envio) throw new NotFoundException(`Envio ${dto.envio_id} not found`);
+        const envio = await this.envioRepo.findOne({ where: { id: newMaterial.envio_id } });
+        if (!envio) throw new NotFoundException(`Envio ${newMaterial.envio_id} not found`);
         (existing as any).envio = envio;
       }
     }
 
-    return this.repo.save(existing);
+    const saved = await this.repo.save(existing);
+    return this.toDto(saved);
   }
 
-  async remove(id: string) {
+  async deleteMaterial(id: string): Promise<{ deleted: boolean; id: string }> {
     const existing = await this.repo.findOne({ where: { id } });
     if (!existing) throw new NotFoundException(`Material ${id} not found`);
     await this.repo.remove(existing);
     return { deleted: true, id };
   }
 }
+
+const materiaisServiceProvider: ClassProvider<IMateriaisService> = {
+  provide: IMateriaisService,
+  useClass: MateriaisService,
+};
+
+export default materiaisServiceProvider;
