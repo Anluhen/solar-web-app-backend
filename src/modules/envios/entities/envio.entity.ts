@@ -9,6 +9,7 @@ import {
   Index,
 } from 'typeorm';
 import MaterialEntity from '../../materiais/entities/material.entity';
+import { ApiProperty } from '@nestjs/swagger';
 
 export enum StatusEnvio {
   RASCUNHO = 'RASCUNHO',
@@ -23,33 +24,43 @@ export enum StatusEnvio {
 @Index('envios_zvgp_idx', ['zvgp'])
 export default class Envio {
   // bigint -> prefer string in TS to avoid precision loss
+  @ApiProperty({ required: true, type: String, description: 'Envio id (bigint as string)' })
   @PrimaryGeneratedColumn({ type: 'bigint' })
   id!: string;
 
+  @ApiProperty({ required: true })
   @Column({ type: 'text' })
   pep!: string;
 
+  @ApiProperty({ required: true })
   @Column({ type: 'text' })
   zvgp!: string;
 
+  @ApiProperty({ required: true })
   @Column({ type: 'text' })
   gerador!: string;
 
+  @ApiProperty({ required: false, nullable: true })
   @Column({ type: 'text', nullable: true })
   observacoes?: string | null;
 
+  @ApiProperty({ required: true, enum: StatusEnvio, default: StatusEnvio.RASCUNHO })
   @Column({ type: 'text', default: StatusEnvio.RASCUNHO })
   status!: StatusEnvio;
 
+  @ApiProperty({ required: true, type: String, description: 'ISO date-time' })
   @CreateDateColumn({ type: 'timestamptz', default: () => 'now()' })
   created_at!: Date;
 
+  @ApiProperty({ required: true, type: String, description: 'ISO date-time' })
   @UpdateDateColumn({ type: 'timestamptz', default: () => 'now()' })
   updated_at!: Date;
 
+  @ApiProperty({ required: true, type: String, description: 'YYYY-MM-DD' })
   @Column({ type: 'date', default: () => 'CURRENT_DATE' })
   separacao!: string; // keep as string (YYYY-MM-DD) or use Date if you prefer
 
+  @ApiProperty({ required: false, type: () => [MaterialEntity], description: 'Related materials (when included)' })
   @OneToMany(() => MaterialEntity, (m) => m.envio)
   materiais?: MaterialEntity[];
 }

@@ -3,9 +3,10 @@ include:
     ref: master
     file: 'nest.yml'
 
-variables: 
+variables:
   AUTOMATIC_DEPLOYMENT_ON_QA: "true"
   NODE_VERSION: "20"
+  K8S_APP_PORT: "3001"
 
 deploy:qa:
   environment: qas

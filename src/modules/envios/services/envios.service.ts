@@ -47,19 +47,19 @@ class EnviosService implements IEnviosService {
     return qb.getMany();
   }
 
-  async getEnvio(id: number): Promise<EnvioEntity> {
+  async getEnvio(id: string): Promise<EnvioEntity> {
     const envio = await this.repo.findOne({ where: { id: String(id) } });
     if (!envio) throw new NotFoundException(`Envio ${id} not found`);
     return envio;
   }
 
-  async putEnvio(id: number, dto: EnvioFormDto): Promise<EnvioEntity> {
+  async putEnvio(id: string, dto: EnvioFormDto): Promise<EnvioEntity> {
     const entity = await this.repo.preload({ id: String(id), ...dto });
     if (!entity) throw new NotFoundException(`Envio ${id} not found`);
     return this.repo.save(entity);
   }
 
-  async deleteEnvio(id: number): Promise<EnvioEntity> {
+  async deleteEnvio(id: string): Promise<EnvioEntity> {
     const entity = await this.repo.findOne({ where: { id: String(id) } });
     if (!entity) throw new NotFoundException(`Envio ${id} not found`);
     await this.repo.remove(entity);

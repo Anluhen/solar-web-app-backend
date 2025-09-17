@@ -49,7 +49,7 @@ export class EnviosController {
   @Put(":id")
   @ApiOkResponse({ type: EnvioEntity })
   async putEnvio(
-    @Param("id", ParseIntPipe) id: number,
+    @Param("id") id: string,
     @Body() envio: EnvioFormDto,
   ): Promise<EnvioEntity> {
     return this.enviosService.putEnvio(id, envio);
@@ -58,7 +58,7 @@ export class EnviosController {
   @Get(':id')
   @ApiOkResponse({ type: EnvioEntity })
   async getEnvio(
-    @Param('id', ParseIntPipe) id: number,
+    @Param('id') id: string,
     @Query('withMateriais', new DefaultValuePipe('true'), ParseBoolPipe) withMateriais: boolean,
   ): Promise<EnvioEntity> {
     return this.enviosService.getEnvio(id);
@@ -67,15 +67,15 @@ export class EnviosController {
   @Delete(':id')
   @ApiOkResponse({ type: EnvioEntity })
   async deleteEnvio(
-    @Param('id', ParseIntPipe) id: number
+    @Param('id') id: string
   ): Promise<EnvioEntity> {
     return this.enviosService.deleteEnvio(id);
   }
 
   @Get(':id/materiais')
   @ApiOkResponse({ type: MaterialEntity, isArray: true })
-  async findMateriaisByEnvio(@Param('id', ParseIntPipe) id: number
+  async findMateriaisByEnvio(@Param('id') id: string
   ): Promise<MaterialEntity[]> {
-    return this.materiaisService.getMateriaisByEnvio(String(id));
+    return this.materiaisService.getMateriaisByEnvio(id);
   }
 }

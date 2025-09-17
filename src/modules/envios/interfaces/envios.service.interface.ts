@@ -9,8 +9,7 @@ export abstract class IEnviosService {
         filters?: { id?: string; pep?: string; zvgp?: string; gerador?: string };
         withMateriais?: boolean;
     }): Promise<EnvioEntity[]>;
-    abstract getEnvio(id: number): Promise<EnvioEntity>;
-    abstract putEnvio(id: number, dto: EnvioFormDto): Promise<EnvioEntity>;
-    abstract deleteEnvio(id: number): Promise<EnvioEntity>;
+    abstract getEnvio(id: string): Promise<EnvioEntity>;
+    abstract putEnvio(id: string, dto: EnvioFormDto): Promise<EnvioEntity>;
+    abstract deleteEnvio(id: string): Promise<EnvioEntity>;
 }
-
