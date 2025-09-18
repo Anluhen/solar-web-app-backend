@@ -5,7 +5,7 @@ import MaterialFormDto from "../dtos/material-form.dto";
 @Injectable()
 export abstract class IMateriaisService {
     abstract postMaterial(material: MaterialFormDto): Promise<MaterialEntity>;
-    abstract getMateriais(opts?: { withEnvio?: boolean }): Promise<MaterialEntity[]>;
+    abstract getMateriais(): Promise<MaterialEntity[]>;
     abstract getMateriaisByEnvio(envioId: string): Promise<MaterialEntity[]>;
     abstract getMaterial(id: string, opts?: { withEnvio?: boolean }): Promise<MaterialEntity>;
     abstract putMaterial(id: string, newMaterial: MaterialFormDto): Promise<MaterialEntity>;

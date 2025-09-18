@@ -2,10 +2,9 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export default class MaterialFormDto {
-  @ApiProperty({ required: false, description: "Relation envio id (bigint as string)" })
-  @IsOptional()
+  @ApiProperty({ required: true, description: "Relation envio id (bigint as string)" })
   @IsString()
-  envio_id?: string;
+  envio_id!: string;
 
   @ApiProperty({ required: false, description: "SAP code (bigint as string)" })
   @IsOptional()
@@ -21,4 +20,3 @@ export default class MaterialFormDto {
   @IsInt()
   quantidade!: number;
 }
-

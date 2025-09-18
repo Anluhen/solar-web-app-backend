@@ -1,4 +1,4 @@
-import { ClassProvider, Injectable, NotFoundException } from "@nestjs/common";
+import { BadRequestException, ClassProvider, Injectable, NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import MaterialEntity from "../entities/material.entity";
@@ -19,12 +19,13 @@ class MateriaisService implements IMateriaisService {
       quantidade: materialDto.quantidade,
     });
 
-    // optional relation
-    if (materialDto.envio_id) {
-      const envio = await this.envioRepo.findOne({ where: { id: materialDto.envio_id } });
-      if (!envio) throw new NotFoundException(`Envio ${materialDto.envio_id} not found`);
-      (material as any).envio = envio;
+    // relation is required: every material must belong to an envio
+    if (!materialDto.envio_id) {
+      throw new BadRequestException('envio_id is required for Material');
     }
+    const envio = await this.envioRepo.findOne({ where: { id: materialDto.envio_id } });
+    if (!envio) throw new NotFoundException(`Envio ${materialDto.envio_id} not found`);
+    (material as any).envio = envio;
 
     // sap has DB default via sequence; only set if provided
     if (materialDto.sap) (material as any).sap = materialDto.sap;
@@ -33,9 +34,8 @@ class MateriaisService implements IMateriaisService {
     return saved;
   }
 
-  async getMateriais(opts?: { withEnvio?: boolean }): Promise<MaterialEntity[]> {
-    const relations = opts?.withEnvio ? { envio: true } : undefined;
-    const list = await this.repo.find({ order: { id: 'DESC' }, relations });
+  async getMateriais(): Promise<MaterialEntity[]> {
+    const list = await this.repo.find({ order: { id: 'DESC' } });
     return list;
   }
 
@@ -66,15 +66,14 @@ class MateriaisService implements IMateriaisService {
     if (newMaterial.quantidade !== undefined) existing.quantidade = newMaterial.quantidade;
     if (newMaterial.sap !== undefined) (existing as any).sap = newMaterial.sap;
 
-    // Re-point relation if envio_id provided (can set to null)
+    // Re-point relation if envio_id provided (must be a valid id; cannot be null)
     if (newMaterial.envio_id !== undefined) {
-      if (newMaterial.envio_id === null || newMaterial.envio_id === (undefined as any)) {
-        (existing as any).envio = null;
-      } else {
-        const envio = await this.envioRepo.findOne({ where: { id: newMaterial.envio_id } });
-        if (!envio) throw new NotFoundException(`Envio ${newMaterial.envio_id} not found`);
-        (existing as any).envio = envio;
+      if ((newMaterial as any).envio_id === null) {
+        throw new BadRequestException('envio_id cannot be null');
       }
+      const envio = await this.envioRepo.findOne({ where: { id: newMaterial.envio_id } });
+      if (!envio) throw new NotFoundException(`Envio ${newMaterial.envio_id} not found`);
+      (existing as any).envio = envio;
     }
 
     const saved = await this.repo.save(existing);

@@ -3,14 +3,12 @@ import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import EnvioEntity from "../entities/envio.entity";
 import EnvioFormDto from "../dtos/envio-form.dto";
-import MaterialEntity from "../../materiais/entities/material.entity";
 import { IEnviosService } from "../interfaces/envios.service.interface";
 
 @Injectable()
 class EnviosService implements IEnviosService {
   constructor(
     @InjectRepository(EnvioEntity, "postgreConnection") private readonly repo: Repository<EnvioEntity>,
-    @InjectRepository(MaterialEntity, "postgreConnection") private readonly matRepo: Repository<MaterialEntity>,
   ) { }
 
   async postEnvio(dto: EnvioFormDto): Promise<EnvioEntity> {
@@ -20,7 +18,6 @@ class EnviosService implements IEnviosService {
 
   getEnvios(opts?: {
     filters?: { id?: string; pep?: string; zvgp?: string; gerador?: string };
-    withMateriais?: boolean;
   }): Promise<EnvioEntity[]> {
     const qb = this.repo.createQueryBuilder('envio');
 
@@ -39,9 +36,7 @@ class EnviosService implements IEnviosService {
       qb.andWhere('envio.gerador ILIKE :gerador', { gerador: `%${f.gerador.trim()}%` });
     }
 
-    if (opts?.withMateriais) {
-      qb.leftJoinAndSelect('envio.materiais', 'materiais');
-    }
+    // materiais are fetched via a dedicated endpoint; no relation join here
 
     qb.orderBy('envio.id', 'ASC');
     return qb.getMany();

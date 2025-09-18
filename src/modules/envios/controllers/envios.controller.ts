@@ -37,13 +37,12 @@ export class EnviosController {
   @Get()
   @ApiOkResponse({ type: EnvioEntity, isArray: true })
   getEnvios(
-    @Query('withMateriais', new DefaultValuePipe('false'), ParseBoolPipe) withMateriais: boolean,
     @Query('id') id?: string,
     @Query('pep') pep?: string,
     @Query('zvgp') zvgp?: string,
     @Query('gerador') gerador?: string,
   ): Promise<EnvioEntity[]> {
-    return this.enviosService.getEnvios({ filters: { id, pep, zvgp, gerador }, withMateriais });
+    return this.enviosService.getEnvios({ filters: { id, pep, zvgp, gerador } });
   }
 
   @Put(":id")

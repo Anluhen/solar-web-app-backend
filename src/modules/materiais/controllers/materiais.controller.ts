@@ -15,7 +15,7 @@ import { IMateriaisService } from "../interfaces/materiais.service.interface";
 import MaterialFormDto from "../dtos/material-form.dto";
 import MaterialEntity from "../entities/material.entity";
 
-@Controller("api/materiais")
+@Controller("materiais")
 @ApiTags("Materiais")
 export class MateriaisController {
   constructor(private readonly materiaisService: IMateriaisService) { }
@@ -28,10 +28,8 @@ export class MateriaisController {
 
   @Get()
   @ApiOkResponse({ type: MaterialEntity, isArray: true })
-  async getMateriais(
-    @Query("withEnvio", new DefaultValuePipe("false"), ParseBoolPipe) withEnvio: boolean,
-  ): Promise<MaterialEntity[]> {
-    return this.materiaisService.getMateriais({ withEnvio });
+  async getMateriais(): Promise<MaterialEntity[]> {
+    return this.materiaisService.getMateriais();
   }
 
   @Get(':id')
