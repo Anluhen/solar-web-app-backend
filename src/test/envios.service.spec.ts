@@ -12,6 +12,7 @@ const baseEnvio: EnvioEntity = {
   pep: "pep-001",
   zvgp: "zvgp-001",
   gerador: "gerador-001",
+  ufv: "UFV Base",
   observacoes: "Initial notes",
   status: StatusEnvio.RASCUNHO,
   created_at: new Date("2024-01-01T00:00:00.000Z"),
@@ -84,18 +85,19 @@ describe("Envios Service", () => {
       pep: baseEnvio.pep,
       zvgp: baseEnvio.zvgp,
       gerador: baseEnvio.gerador,
+      ufv: "UFV Nova",
       observacoes: baseEnvio.observacoes ?? undefined,
       status: StatusEnvio.ENVIADO,
       separacao: baseEnvio.separacao,
     };
 
-    const savedEnvio = { ...baseEnvio, status: StatusEnvio.ENVIADO };
+    const savedEnvio = { ...baseEnvio, status: StatusEnvio.ENVIADO, ufv: dto.ufv };
     envioRepo.create.mockReturnValue(savedEnvio);
     envioRepo.save.mockResolvedValue(savedEnvio);
 
     const response = await enviosService.postEnvio(dto);
 
-    expect(envioRepo.create).toHaveBeenCalledWith(dto);
+    expect(envioRepo.create).toHaveBeenCalledWith({ ...dto });
     expect(envioRepo.save).toHaveBeenCalledWith(savedEnvio);
     expect(response).toEqual(savedEnvio);
   });
@@ -109,6 +111,27 @@ describe("Envios Service", () => {
     expect(envioRepo.createQueryBuilder).toHaveBeenCalledWith("envio");
     expect(queryBuilder.orderBy).toHaveBeenCalledWith("envio.id", "ASC");
     expect(response).toEqual([baseEnvio]);
+  });
+
+  it("Get Envios applies filters", async () => {
+    const queryBuilder = buildQueryBuilder();
+    queryBuilder.getMany.mockResolvedValue([baseEnvio]);
+
+    const filters = {
+      id: baseEnvio.id,
+      pep: baseEnvio.pep,
+      zvgp: baseEnvio.zvgp,
+      gerador: baseEnvio.gerador,
+      ufv: baseEnvio.ufv,
+    };
+
+    await enviosService.getEnvios({ filters });
+
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith("envio.id = :id", { id: filters.id });
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith("envio.pep ILIKE :pep", { pep: `%${filters.pep}%` });
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith("envio.zvgp ILIKE :zvgp", { zvgp: `%${filters.zvgp}%` });
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith("envio.gerador ILIKE :gerador", { gerador: `%${filters.gerador}%` });
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith("envio.ufv ILIKE :ufv", { ufv: `%${filters.ufv}%` });
   });
 
   it("Get Envio", async () => {
@@ -125,6 +148,7 @@ describe("Envios Service", () => {
       pep: "pep-002",
       zvgp: baseEnvio.zvgp,
       gerador: baseEnvio.gerador,
+      ufv: baseEnvio.ufv,
       status: StatusEnvio.CANCELADO,
     };
 

@@ -2,7 +2,6 @@ import { TypeOrmModule, TypeOrmModuleOptions } from "@nestjs/typeorm";
 import ConfigurationModule from "../configuration/configuration.module";
 import { ConfigService } from "@nestjs/config";
 import ENV_VARIABLE_NAMES from "src/utils/env_variable_names";
-import StaffEntity from "../staff/entities/staff.entity";
 
 const PostgresModule = TypeOrmModule.forRootAsync({
     name: "postgreConnection",
@@ -12,17 +11,18 @@ const PostgresModule = TypeOrmModule.forRootAsync({
         configService: ConfigService,
     ): Promise<TypeOrmModuleOptions> => ({
         type: "postgres",
-        host: configService.getOrThrow(ENV_VARIABLE_NAMES.POSTGRESQL_HOST),
-        port: configService.getOrThrow(ENV_VARIABLE_NAMES.POSTGRESQL_PORT),
+        host: configService.getOrThrow(ENV_VARIABLE_NAMES.POSTGRES_HOST),
+        port: configService.getOrThrow(ENV_VARIABLE_NAMES.POSTGRES_PORT),
         username: configService.getOrThrow(
-            ENV_VARIABLE_NAMES.POSTGRESQL_USERNAME,
+            ENV_VARIABLE_NAMES.POSTGRES_USERNAME,
         ),
         password: configService.getOrThrow(
-            ENV_VARIABLE_NAMES.POSTGRESQL_PASSWORD,
+            ENV_VARIABLE_NAMES.POSTGRES_PASSWORD,
         ),
-        database: configService.getOrThrow(ENV_VARIABLE_NAMES.POSTGRESQL_NAME),
+        database: configService.getOrThrow(ENV_VARIABLE_NAMES.POSTGRES_DATABASE),
         autoLoadEntities: true,
-        synchronize: true,
+        synchronize: false,
+        migrations: ['src/migrations/*.ts'],
     }),
 });
 

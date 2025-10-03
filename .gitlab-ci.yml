@@ -8,7 +8,20 @@ variables:
   NODE_VERSION: "20"
   K8S_APP_PORT: "3001"
 
+run:migrations:
+  stage: deploy
+  image: node:$NODE_VERSION
+  script:
+    - test -f typeorm.config.ts && echo "typeorm.config.ts present"
+    - node -e "console.log(process.env.POSTGRES_DATABASE)"
+    - npm ci
+    - npm run build
+    - npm run migration:run
+  environment: qas
+
 deploy:qa:
+  needs:
+    - run:migrations
   environment: qas
 
 deploy:prd:

@@ -22,6 +22,7 @@ export enum StatusEnvio {
 @Index('envios_gerador_idx', ['gerador'])
 @Index('envios_pep_idx', ['pep'])
 @Index('envios_zvgp_idx', ['zvgp'])
+@Index('envios_ufv_idx', ['ufv'])
 export default class Envio {
   // bigint -> prefer string in TS to avoid precision loss
   @ApiProperty({ required: true, type: String, description: 'Envio id (bigint as string)' })
@@ -39,6 +40,10 @@ export default class Envio {
   @ApiProperty({ required: true })
   @Column({ type: 'text' })
   gerador!: string;
+
+  @ApiProperty({ required: true, description: 'Nome da UFV' })
+  @Column({ type: 'text' })
+  ufv!: string;
 
   @ApiProperty({ required: false, nullable: true })
   @Column({ type: 'text', nullable: true })

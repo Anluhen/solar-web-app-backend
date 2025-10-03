@@ -12,12 +12,19 @@ class EnviosService implements IEnviosService {
   ) { }
 
   async postEnvio(dto: EnvioFormDto): Promise<EnvioEntity> {
-    const envio = this.repo.create(dto);
+    const payload = { ...dto, ufv: dto.ufv ?? "SEM NOME" };
+    const envio = this.repo.create(payload);
     return this.repo.save(envio);
   }
 
   getEnvios(opts?: {
-    filters?: { id?: string; pep?: string; zvgp?: string; gerador?: string };
+    filters?: {
+      id?: string;
+      pep?: string;
+      zvgp?: string;
+      gerador?: string;
+      ufv?: string;
+    };
   }): Promise<EnvioEntity[]> {
     const qb = this.repo.createQueryBuilder('envio');
 
@@ -35,6 +42,9 @@ class EnviosService implements IEnviosService {
     if (f.gerador && f.gerador.trim() !== '') {
       qb.andWhere('envio.gerador ILIKE :gerador', { gerador: `%${f.gerador.trim()}%` });
     }
+    if (f.ufv && f.ufv.trim() !== '') {
+      qb.andWhere('envio.ufv ILIKE :ufv', { ufv: `%${f.ufv.trim()}%` });
+    }
 
     // materiais are fetched via a dedicated endpoint; no relation join here
 
@@ -49,7 +59,8 @@ class EnviosService implements IEnviosService {
   }
 
   async putEnvio(id: string, dto: EnvioFormDto): Promise<EnvioEntity> {
-    const entity = await this.repo.preload({ id: String(id), ...dto });
+    const payload = { ...dto, ufv: dto.ufv ?? "SEM NOME" };
+    const entity = await this.repo.preload({ id: String(id), ...payload });
     if (!entity) throw new NotFoundException(`Envio ${id} not found`);
     return this.repo.save(entity);
   }

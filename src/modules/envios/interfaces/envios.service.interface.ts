@@ -6,7 +6,13 @@ import EnvioFormDto from "../dtos/envio-form.dto";
 export abstract class IEnviosService {
     abstract postEnvio(dto: EnvioFormDto): Promise<EnvioEntity>;
     abstract getEnvios(opts?: {
-        filters?: { id?: string; pep?: string; zvgp?: string; gerador?: string };
+        filters?: {
+            id?: string;
+            pep?: string;
+            zvgp?: string;
+            gerador?: string;
+            ufv?: string;
+        };
     }): Promise<EnvioEntity[]>;
     abstract getEnvio(id: string): Promise<EnvioEntity>;
     abstract putEnvio(id: string, dto: EnvioFormDto): Promise<EnvioEntity>;

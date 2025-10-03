@@ -19,6 +19,15 @@ export default class EnvioFormDto {
   @IsNotEmpty()
   gerador!: string;
 
+  @ApiProperty({
+    required: true,
+    description: "Nome da UFV",
+    default: "SEM NOME",
+  })
+  @IsString()
+  @IsNotEmpty()
+  ufv: string = "SEM NOME";
+
   @IsString()
   @IsOptional()
   observacoes?: string;
