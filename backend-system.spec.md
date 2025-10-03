@@ -18,6 +18,7 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
   "pep": "PEP-123",
   "zvgp": "ZV-987",
   "gerador": "Gerador Norte",
+  "ufv": "UFV Norte",
   "separacao": "2024-06-15",
   "observacoes": "Prioridade alta"
 }
@@ -27,6 +28,7 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
   "pep": "PEP-123",
   "zvgp": "ZV-987",
   "gerador": "Gerador Norte",
+  "ufv": "UFV Norte",
   "separacao": "2024-06-15",
   "observacoes": "Prioridade alta",
   "status": "RASCUNHO",
@@ -34,13 +36,14 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
   "updated_at": "2024-06-10T18:05:21.123Z"
 }
 ``` |
-| `GET /envios?id=&pep=&zvgp=&gerador=` | List envios filtered by optional query params (`EnviosService.getEnvios`) | `GET /envios?pep=PEP-` | ```json
+| `GET /envios?id=&pep=&zvgp=&gerador=&ufv=` | List envios filtered by optional query params (`EnviosService.getEnvios`) | `GET /envios?pep=PEP-&ufv=UFV` | ```json
 [
   {
     "id": "42",
     "pep": "PEP-123",
     "zvgp": "ZV-987",
     "gerador": "Gerador Norte",
+    "ufv": "UFV Norte",
     "separacao": "2024-06-15",
     "observacoes": "Prioridade alta",
     "status": "RASCUNHO",
@@ -55,6 +58,7 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
   "pep": "PEP-123",
   "zvgp": "ZV-987",
   "gerador": "Gerador Norte",
+  "ufv": "UFV Norte",
   "separacao": "2024-06-15",
   "observacoes": "Prioridade alta",
   "status": "RASCUNHO",
@@ -65,6 +69,9 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
 | `PUT /envios/:id` | Update an envio (`EnviosService.putEnvio`). | ```json
 {
   "zvgp": "ZV-765",
+  "gerador": "Gerador Norte",
+  "pep": "PEP-123",
+  "ufv": "UFV Leste",
   "observacoes": "Cliente atualizou endereço"
 }
 ``` | ```json
@@ -73,6 +80,7 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
   "pep": "PEP-123",
   "zvgp": "ZV-765",
   "gerador": "Gerador Norte",
+  "ufv": "UFV Leste",
   "separacao": "2024-06-15",
   "observacoes": "Cliente atualizou endereço",
   "status": "RASCUNHO",
@@ -86,6 +94,7 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
   "pep": "PEP-123",
   "zvgp": "ZV-987",
   "gerador": "Gerador Norte",
+  "ufv": "UFV Norte",
   "separacao": "2024-06-15",
   "observacoes": "Prioridade alta",
   "status": "RASCUNHO",
@@ -108,7 +117,7 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
 ``` |
 
 **Error responses**
-- `400 Bad Request`: DTO validation failures, e.g. missing `pep` in create (`EnvioFormDto`).
+- `400 Bad Request`: DTO validation failures, e.g. missing `pep`/`ufv` in create (`EnvioFormDto`).
 - `404 Not Found`: Non-existent envio id on `GET/PUT/DELETE` (`EnviosService`).
 - `409` conflicts not currently emitted; duplicates rely on upstream constraints.
 
@@ -158,6 +167,7 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
   "envio": {
     "id": "42",
     "pep": "PEP-123",
+    "ufv": "UFV Norte",
     "status": "RASCUNHO"
   }
 }
@@ -269,7 +279,7 @@ Sample request:
 ## Configuration & Environment
 | Variable | Purpose |
 | --- | --- |
-| `POSTGRESQL_HOST`, `POSTGRESQL_PORT`, `POSTGRESQL_USERNAME`, `POSTGRESQL_PASSWORD`, `POSTGRESQL_NAME` | Database connection for TypeORM. |
+| `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USERNAME`, `POSTGRES_PASSWORD`, `POSTGRES_DATABASE` | Database connection for TypeORM. |
 | `SWAGGER_SERVERS_LIST` | Optional CSV list of servers added to Swagger document. |
 | Auth-related variables (e.g. `OPENID_WELL_KNOWN_URL`, `ISSUER`, `AUDIENCE`) | Reserved for future OpenID integrations via `ENV_VARIABLE_NAMES`. |
 
@@ -278,3 +288,4 @@ Sample request:
 - Entities map bigint columns to strings in TypeScript to avoid precision loss; consumers must treat ids as strings.
 - Removing an envio cascades delete to materiais because of `onDelete: 'CASCADE'` in `MaterialEntity`.
 - Swagger UI is served at `/api` with JSON document available at `/api/json` for tooling integration.
+- NPM scripts `npm run typeorm`, `npm run migration:run`, and `npm run migration:generate -- <Name>` wrap the TypeORM CLI with the project datasource to simplify local migration workflows.

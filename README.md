@@ -9,11 +9,11 @@ This `config/.env` file should contain the given variables:
 |Name|Description|Example|
 |-|-|-|
 |SWAGGER_SERVERS_LIST|List of servers divided by `,` that are passed to the [servers](https://swagger.io/docs/specification/api-host-and-base-path/) property of OpenAPI|`/,/api`|
-|POSTGRESQL_HOST|The PostgreSQL host that will be called|`qas-postgresql-ap.weg.net`|
-|POSTGRESQL_PORT|Number of port PostgreSQL|3000|
-|POSTGRESQL_USERNAME| Username to access database|
-|POSTGRESQL_PASSWORD| Password to access database|
-|POSTGRESQL_NAME| Database name|
+|POSTGRES_HOST|The PostgreSQL host that will be called|`qas-postgresql-ap.weg.net`|
+|POSTGRES_PORT|Number of port PostgreSQL|3000|
+|POSTGRES_USERNAME| Username to access database|
+|POSTGRES_PASSWORD| Password to access database|
+|POSTGRES_DATABASE| Database name|
 run the development server:
 
 ```bash
