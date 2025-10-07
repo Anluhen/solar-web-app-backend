@@ -6,7 +6,8 @@ import materiaisServiceProvider from "../modules/materiais/services/materiais.se
 import { IMateriaisService } from "../modules/materiais/interfaces/materiais.service.interface";
 import MaterialEntity from "../modules/materiais/entities/material.entity";
 import MaterialFormDto from "../modules/materiais/dtos/material-form.dto";
-import EnvioEntity, { StatusEnvio } from "../modules/envios/entities/envio.entity";
+import EnvioEntity from "../modules/envios/entities/envio.entity";
+import { StatusEnvio } from "../modules/envios/rules/status.rules";
 
 const baseEnvio: EnvioEntity = {
   id: "1",
