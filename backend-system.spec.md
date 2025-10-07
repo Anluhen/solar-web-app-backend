@@ -4,7 +4,7 @@
 The backend is a NestJS 10 application that exposes RESTful endpoints for managing `Envios`, `Materiais`, demo `Items`, staff records, and health checks. It runs on port `3001` by default (`backend/src/main.ts`) and automatically registers Swagger docs at `/api`. Persistence is provided by PostgreSQL via TypeORM with entities mapped per feature module.
 
 ## Architecture
-- NestJS modular structure (`backend/src/app.module.ts`) composes feature modules: `Envios`, `Materiais`, `Items`, `Staff`, `Postgres`, `Configuration`, and `Health`.
+- NestJS modular structure (`backend/src/app.module.ts`) composes feature modules: `Envios`, `Materiais`, `Items`, `Staff`, `Postgres`, `Configuration`, `Mail`, and `Health`.
 - `ConfigurationModule` loads environment variables from `config/.env` using `@nestjs/config` (`backend/src/modules/configuration/configuration.module.ts`).
 - `PostgresModule` configures the `postgreConnection` TypeORM connection (`backend/src/modules/postgres/postgres.module.ts`) with `synchronize: true` for schema sync in development.
 - Each domain module declares controllers, DTOs, services, and entities. Abstract service interfaces provide injection tokens so implementations can be swapped.
@@ -311,12 +311,14 @@ Sample request:
 - **Items demo**: `backend/src/modules/items/controllers/items.controller.ts`
 - **Database config**: `backend/src/modules/postgres/postgres.module.ts`, env keys in `backend/src/utils/env_variable_names.ts`
 - **Configuration**: `backend/src/modules/configuration/configuration.module.ts`
+- **Mail**: `backend/src/modules/mail/mail.module.ts`, `backend/src/modules/mail/services/mail.service.ts`
 
 ## Configuration & Environment
 | Variable | Purpose |
 | --- | --- |
 | `POSTGRES_HOST`, `POSTGRES_PORT`, `POSTGRES_USERNAME`, `POSTGRES_PASSWORD`, `POSTGRES_DATABASE` | Database connection for TypeORM. |
 | `SWAGGER_SERVERS_LIST` | Optional CSV list of servers added to Swagger document. |
+| `MAIL_HOST`, `MAIL_PORT`, `MAIL_USERNAME`, `MAIL_PASSWORD`, `MAIL_FROM`, `MAIL_AUTH` | SMTP credentials consumed by `MailService`. Missing values prevent the Nodemailer transporter from being created. |
 | Auth-related variables (e.g. `OPENID_WELL_KNOWN_URL`, `ISSUER`, `AUDIENCE`) | Reserved for future OpenID integrations via `ENV_VARIABLE_NAMES`. |
 
 ## Operational Considerations
