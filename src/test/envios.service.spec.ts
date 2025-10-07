@@ -4,7 +4,8 @@ import { getRepositoryToken } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import enviosServiceProvider from "../modules/envios/services/envios.service";
 import { IEnviosService } from "../modules/envios/interfaces/envios.service.interface";
-import EnvioEntity, { StatusEnvio } from "../modules/envios/entities/envio.entity";
+import EnvioEntity from "../modules/envios/entities/envio.entity";
+import { StatusEnvio } from "../modules/envios/rules/status.rules";
 import EnvioFormDto from "../modules/envios/dtos/envio-form.dto";
 
 const baseEnvio: EnvioEntity = {

@@ -115,6 +115,42 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
   }
 ]
 ``` |
+| `GET /envios/status?status=` | Retrieve the status rule for a given status (defaults to `RASCUNHO` when omitted). | `GET /envios/status` | ```json
+{
+  "id": "RASCUNHO",
+  "name": "Rascunho",
+  "required": ["ufv", "pep", "zvgp", "gerador", "separacao"],
+  "editable": ["ufv", "pep", "zvgp", "gerador", "separacao", "observacoes", "materiaisTable"],
+  "next": "ENVIADO"
+}
+``` |
+| `GET /envios/:id/status` | Return the rule associated with the envio's persisted status. | `GET /envios/42/status` | ```json
+{
+  "id": "RASCUNHO",
+  "name": "Rascunho",
+  "required": ["ufv", "pep", "zvgp", "gerador", "separacao"],
+  "editable": ["ufv", "pep", "zvgp", "gerador", "separacao", "observacoes", "materiaisTable"],
+  "next": "ENVIADO"
+}
+``` |
+| `PUT /envios/:id/status` | Advance the envio to the next status defined by `StatusRulesService`. Body mirrors `EnvioFormDto` for validation and may include comments. | ```json
+{
+  "observacoes": "Pronto para envio"
+}
+``` | ```json
+{
+  "id": "42",
+  "pep": "PEP-123",
+  "zvgp": "ZV-987",
+  "gerador": "Gerador Norte",
+  "ufv": "UFV Norte",
+  "separacao": "2024-06-15",
+  "observacoes": "Pronto para envio",
+  "status": "ENVIADO",
+  "created_at": "2024-06-10T18:05:21.123Z",
+  "updated_at": "2024-06-12T09:44:02.001Z"
+}
+``` |
 
 **Error responses**
 - `400 Bad Request`: DTO validation failures, e.g. missing `pep`/`ufv` in create (`EnvioFormDto`).
