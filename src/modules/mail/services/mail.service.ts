@@ -1,34 +1,60 @@
 import { Injectable, ClassProvider } from "@nestjs/common";
-import { IMailService } from "../interfaces/mail.service.interface";
 import { ConfigService } from "@nestjs/config";
-import nodemailer, { Transporter } from "nodemailer";
+import { createTransport, getTestMessageUrl, Transporter } from "nodemailer";
+import SMTPTransport from "nodemailer/lib/smtp-transport";
+import { IMailService } from "../interfaces/mail.service.interface";
 import ENV_VARIABLE_NAMES from "src/utils/env_variable_names";
 
 @Injectable()
 class MailService implements IMailService {
     private readonly transporter: Transporter;
+    private readonly usesTestAccount: boolean;
 
     constructor(private readonly configService: ConfigService) {
-        this.transporter = nodemailer.createTransport({
-            // Create a test account
+        const configuredHost = this.configService.get<string>(
+            ENV_VARIABLE_NAMES.MAIL_HOST,
+        );
+
+        if (configuredHost) {
+            const configuredPort = Number(
+                this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_PORT),
+            );
+
+            if (Number.isNaN(configuredPort)) {
+                throw new Error("MAIL_PORT must be a valid number");
+            }
+
+            const smtpOptions: SMTPTransport.Options = {
+                host: configuredHost,
+                port: configuredPort,
+                secure: configuredPort === 465,
+                auth: {
+                    user: this.configService.getOrThrow(
+                        ENV_VARIABLE_NAMES.MAIL_USERNAME,
+                    ),
+                    pass: this.configService.getOrThrow(
+                        ENV_VARIABLE_NAMES.MAIL_PASSWORD,
+                    ),
+                },
+            };
+
+            this.transporter = createTransport(smtpOptions);
+            this.usesTestAccount = false;
+            return;
+        }
+
+        const testAccountOptions: SMTPTransport.Options = {
             host: "smtp.ethereal.email",
             port: 587,
-            secure: false, // true for 465, false for other ports
+            secure: false,
             auth: {
-                user: "maddison53@ethereal.email",
-                pass: "jn7jnAPss4f63QBp6D",
+                user: "bernadette.bradtke84@ethereal.email",
+                pass: "zhst7ucu5Zsc2n5Ucu",
             },
+        };
 
-            // Uses a real account
-            // host: this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_HOST),
-            // port: this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_PORT),
-            // secure: true,
-            // auth: {
-            //   type: this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_AUTH),
-            //   user: this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_USERNAME),
-            //   pass: this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_PASSWORD),
-            // },
-        });
+        this.transporter = createTransport(testAccountOptions);
+        this.usesTestAccount = true;
     }
 
     async sendMail(
@@ -49,7 +75,9 @@ class MailService implements IMailService {
             });
 
             console.log("Message sent: %s", info.messageId);
-            console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
+            if (this.usesTestAccount) {
+                console.log("Preview URL: %s", getTestMessageUrl(info));
+            }
         } catch (err) {
             console.error("Error while sending mail", err);
         }

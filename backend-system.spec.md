@@ -152,6 +152,9 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
 }
 ``` |
 
+**Status flow**
+- Envios statuses progress RASCUNHO -> SEPARACAO -> CANCELADO -> RASCUNHO. Status SEPARACAO notifies when reached.
+
 **Error responses**
 - `400 Bad Request`: DTO validation failures, e.g. missing `pep`/`ufv` in create (`EnvioFormDto`).
 - `404 Not Found`: Non-existent envio id on `GET/PUT/DELETE` (`EnviosService`).
