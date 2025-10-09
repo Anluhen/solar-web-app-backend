@@ -9,6 +9,11 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
 - `PostgresModule` configures the `postgreConnection` TypeORM connection (`backend/src/modules/postgres/postgres.module.ts`) with `synchronize: true` for schema sync in development.
 - Each domain module declares controllers, DTOs, services, and entities. Abstract service interfaces provide injection tokens so implementations can be swapped.
 
+## Database Migrations
+- `20240101000000-initial-schema` creates the base tables (envios, materiais, staff). Register it first; on existing databases run `typeorm migration:run --fake` so later migrations can apply without recreating tables.
+- `20250925164631-add-ufv-to-envios` adds the `ufv` column plus index.
+- `20251002120000-allow-separacao-status` rebuilds the status CHECK constraint to include `SEPARACAO`.
+
 ## API Endpoints
 ### Envios (`/envios`)
 | Method & Path | Description | Sample Request | Sample Response |
@@ -121,7 +126,7 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
   "name": "Rascunho",
   "required": ["ufv", "pep", "zvgp", "gerador", "separacao"],
   "editable": ["ufv", "pep", "zvgp", "gerador", "separacao", "observacoes", "materiaisTable"],
-  "next": "ENVIADO"
+  "next": "SEPARACAO"
 }
 ``` |
 | `GET /envios/:id/status` | Return the rule associated with the envio's persisted status. | `GET /envios/42/status` | ```json
@@ -130,7 +135,7 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
   "name": "Rascunho",
   "required": ["ufv", "pep", "zvgp", "gerador", "separacao"],
   "editable": ["ufv", "pep", "zvgp", "gerador", "separacao", "observacoes", "materiaisTable"],
-  "next": "ENVIADO"
+  "next": "SEPARACAO"
 }
 ``` |
 | `PUT /envios/:id/status` | Advance the envio to the next status defined by `StatusRulesService`. Body mirrors `EnvioFormDto` for validation and may include comments. | ```json
@@ -146,7 +151,7 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
   "ufv": "UFV Norte",
   "separacao": "2024-06-15",
   "observacoes": "Pronto para envio",
-  "status": "ENVIADO",
+  "status": "SEPARACAO",
   "created_at": "2024-06-10T18:05:21.123Z",
   "updated_at": "2024-06-12T09:44:02.001Z"
 }
