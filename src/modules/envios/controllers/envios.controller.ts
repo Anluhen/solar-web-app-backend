@@ -85,12 +85,33 @@ export class EnviosController {
     }
 
     @Get(":id/status")
+    @ApiOkResponse({
+        schema: {
+            type: "object",
+            properties: {
+                id: { type: "string", enum: Object.values(StatusEnvio) },
+                name: { type: "string" },
+                required: { type: "array", items: { type: "string" } },
+                editable: { type: "array", items: { type: "string" } },
+                next: { type: "string", nullable: true, enum: Object.values(StatusEnvio) },
+                previous: { type: "string", nullable: true, enum: Object.values(StatusEnvio) },
+                notify: {
+                    oneOf: [
+                        { type: "string" },
+                        { type: "array", items: { type: "string" } },
+                    ],
+                    nullable: true,
+                },
+            },
+            required: ["id", "name", "required", "editable"],
+        },
+    })
     async getStatus(@Param("id") id: string): Promise<StatusRule> {
         const envio = await this.enviosService.getEnvio(id);
         return this.statusRulesService.getStatus(envio.status);
     }
 
-    @Put(":id/status")
+    @Put(":id/nextstatus")
     @ApiOkResponse({ type: EnvioEntity })
     async advanceStatus(
         @Param("id") id: string,
@@ -119,7 +140,7 @@ export class EnviosController {
         const materiais = await this.materiaisService.getMateriaisByEnvio(id);
 
         if (payload.status != current.status && payload.status === StatusEnvio.SEPARACAO) {
-            const to = rule.notify;
+            const to = this.statusRulesService.getStatus(current.status)?.notify;
 
             const escapeHtml = (value: unknown): string =>
                 String(value ?? "")
@@ -204,6 +225,135 @@ export class EnviosController {
             `;
 
             const subject = `${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `
+
+            this.mailService.sendMail(
+                to,
+                subject,
+                htmlBody,
+            );
+        } else {
+            throw new BadRequestException(
+                `Status ${current.status} for envio ${current.id} has no e-mail notification to be sent.`,
+            );
+        }
+
+        return this.enviosService.putEnvio(id, payload);
+    }
+
+    @Put(":id/prevstatus")
+    @ApiOkResponse({ type: EnvioEntity })
+    async returnStatus(
+        @Param("id") id: string,
+        @Body() dto: EnvioFormDto,
+    ): Promise<EnvioEntity> {
+        const current = await this.enviosService.getEnvio(id);
+
+        const rule = this.statusRulesService.getStatus(current.status);
+        if (!rule?.previous) {
+            throw new BadRequestException(
+                `Status ${current.status} cannot return to another state.`,
+            );
+        }
+
+        if (dto.status && dto.status !== current.status) {
+            throw new BadRequestException(
+                `Payload status ${dto.status} does not match envio status ${current.status}.`,
+            );
+        }
+
+        const payload: EnvioFormDto = {
+            ...current,
+            status: rule.previous,
+        };
+
+        const materiais = await this.materiaisService.getMateriaisByEnvio(id);
+
+        if (payload.status != current.status && payload.status === StatusEnvio.CANCELADO) {
+            const to = this.statusRulesService.getStatus(current.status)?.notify;
+
+            const escapeHtml = (value: unknown): string =>
+                String(value ?? "")
+                    .replace(/&/g, "&amp;")
+                    .replace(/</g, "&lt;")
+                    .replace(/>/g, "&gt;")
+                    .replace(/"/g, "&quot;")
+                    .replace(/'/g, "&#39;");
+
+            const formatCell = (value: unknown): string => {
+                if (value === null || value === undefined) return "";
+                if (value instanceof Date) return value.toISOString();
+                return String(value);
+            };
+
+            const tableStyle =
+                "width:100%;border-collapse:collapse;font-family:Arial,Helvetica,sans-serif;";
+            const headerCellStyle =
+                "padding:8px;border:1px solid #d0d7de;background-color:#f4f6fa;text-align:left;";
+            const cellStyle = "padding:8px;border:1px solid #d0d7de;";
+
+            const envioDetails: Array<[string, unknown]> = [
+                ["Envio ID", current.id],
+                ["Status atual", current.status],
+                ["Próximo status", payload.status],
+                ["PEP", current.pep],
+                ["ZVGP", current.zvgp],
+                ["Gerador", current.gerador],
+                ["UFV", current.ufv],
+                ["Observações", current.observacoes ?? ""],
+                ["Data de separação", current.separacao],
+                ["Criado em", current.created_at],
+                ["Atualizado em", current.updated_at],
+            ];
+
+            const envioRows = envioDetails
+                .map(
+                    ([label, value]) => `
+            <tr>
+                <th style="${headerCellStyle}">${escapeHtml(label)}</th>
+                <td style="${cellStyle}">${escapeHtml(formatCell(value))}</td>
+            </tr>
+            `,
+                )
+                .join("");
+
+            const materiaisRows =
+                materiais.length > 0
+                    ? materiais
+                        .map(
+                            (material) => `
+                      <tr>
+                          <td style="${cellStyle}">${escapeHtml(formatCell(material.id))}</td>
+                          <td style="${cellStyle}">${escapeHtml(formatCell(material.sap))}</td>
+                          <td style="${cellStyle}">${escapeHtml(formatCell(material.descricao))}</td>
+                          <td style="${cellStyle}">${escapeHtml(formatCell(material.quantidade))}</td>
+                      </tr>
+                  `,
+                        )
+                        .join("")
+                    : `<tr><td style="${cellStyle}" colspan="4">Nenhum material cadastrado.</td></tr>`;
+
+            const htmlBody = `
+            <div style="font-family:Arial,Helvetica,sans-serif;color:#1f2933;">
+                <h2 style="margin-bottom:16px;">Atualização do envio ${escapeHtml(formatCell(current.id))}</h2>
+                <table style="${tableStyle}">
+                    <tbody>${envioRows}</tbody>
+                </table>
+                <h3 style="margin-top:24px;margin-bottom:8px;">Materiais</h3>
+                <table style="${tableStyle}">
+                    <thead>
+                        <tr>
+                            <th style="${headerCellStyle}">ID</th>
+                            <th style="${headerCellStyle}">SAP</th>
+                            <th style="${headerCellStyle}">Descrição</th>
+                            <th style="${headerCellStyle}">Quantidade</th>
+                        </tr>
+                    </thead>
+                    <tbody>${materiaisRows}</tbody>
+                </table>
+            </div>
+            `;
+
+            const subject = `CANCELAMENTO - ${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `
 
             this.mailService.sendMail(
                 to,
