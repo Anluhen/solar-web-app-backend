@@ -3,6 +3,7 @@ import { Injectable } from "@nestjs/common";
 export enum StatusEnvio {
     RASCUNHO = "RASCUNHO",
     ENVIADO = "ENVIADO",
+    SEPARACAO = "SEPARACAO",
     CANCELADO = "CANCELADO",
 }
 
@@ -23,7 +24,9 @@ export type StatusRule = {
     name: string;
     required: readonly FormField[];
     editable: readonly FormField[];
-    next: StatusEnvio;
+    next?: StatusEnvio;
+    previous?: StatusEnvio;
+    notify?: string | string[];
 };
 
 export const STATUS_RULES: Record<StatusEnvio, StatusRule> = {
@@ -40,14 +43,22 @@ export const STATUS_RULES: Record<StatusEnvio, StatusRule> = {
             "observacoes",
             "materiaisTable",
         ],
-        next: StatusEnvio.ENVIADO,
+        next: StatusEnvio.SEPARACAO,
     },
     ENVIADO: {
         id: StatusEnvio.ENVIADO,
         name: "Enviado",
         required: ["separacao"],
         editable: ["separacao", "observacoes"],
-        next: StatusEnvio.RASCUNHO,
+        next: StatusEnvio.CANCELADO,
+    },
+    SEPARACAO: {
+        id: StatusEnvio.SEPARACAO,
+        name: "Separação",
+        required: ["separacao"],
+        editable: ["separacao", "observacoes"],
+        notify: "e-henchenski@weg.net",
+        previous: StatusEnvio.CANCELADO,
     },
     CANCELADO: {
         id: StatusEnvio.CANCELADO,
