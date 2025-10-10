@@ -4,6 +4,7 @@ import {
     Controller,
     Delete,
     Get,
+    InternalServerErrorException,
     Param,
     Post,
     Put,
@@ -19,7 +20,6 @@ import { StatusEnvio, StatusRule } from "../rules/status.rules";
 import { StatusRulesService } from "../rules/status.rules";
 import { IMailService } from "../../mail/interfaces/mail.service.interface";
 
-
 @Controller("envios")
 @ApiTags("Envios")
 export class EnviosController {
@@ -28,7 +28,7 @@ export class EnviosController {
         private readonly materiaisService: IMateriaisService,
         private readonly statusRulesService: StatusRulesService,
         private readonly mailService: IMailService,
-    ) { }
+    ) {}
 
     @Post()
     @ApiCreatedResponse({ type: EnvioEntity })
@@ -93,8 +93,16 @@ export class EnviosController {
                 name: { type: "string" },
                 required: { type: "array", items: { type: "string" } },
                 editable: { type: "array", items: { type: "string" } },
-                next: { type: "string", nullable: true, enum: Object.values(StatusEnvio) },
-                previous: { type: "string", nullable: true, enum: Object.values(StatusEnvio) },
+                next: {
+                    type: "string",
+                    nullable: true,
+                    enum: Object.values(StatusEnvio),
+                },
+                previous: {
+                    type: "string",
+                    nullable: true,
+                    enum: Object.values(StatusEnvio),
+                },
                 notify: {
                     oneOf: [
                         { type: "string" },
@@ -139,10 +147,15 @@ export class EnviosController {
 
         const materiais = await this.materiaisService.getMateriaisByEnvio(id);
 
-        if (payload.status != current.status && payload.status === StatusEnvio.SEPARACAO) {
-            const to = this.statusRulesService.getStatus(payload.status)?.notify;
+        if (
+            payload.status != current.status &&
+            payload.status === StatusEnvio.SEPARACAO
+        ) {
+            const to = this.statusRulesService.getStatus(
+                payload.status,
+            )?.notify;
 
-            const subject = `${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `
+            const subject = `${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `;
 
             const escapeHtml = (value: unknown): string =>
                 String(value ?? "")
@@ -192,8 +205,8 @@ export class EnviosController {
             const materiaisRows =
                 materiais.length > 0
                     ? materiais
-                        .map(
-                            (material) => `
+                          .map(
+                              (material) => `
                       <tr>
                           <td style="${cellStyle}">${escapeHtml(formatCell(material.id))}</td>
                           <td style="${cellStyle}">${escapeHtml(formatCell(material.sap))}</td>
@@ -201,8 +214,8 @@ export class EnviosController {
                           <td style="${cellStyle}">${escapeHtml(formatCell(material.quantidade))}</td>
                       </tr>
                   `,
-                        )
-                        .join("")
+                          )
+                          .join("")
                     : `<tr><td style="${cellStyle}" colspan="4">Nenhum material cadastrado.</td></tr>`;
 
             const htmlBody = `
@@ -226,11 +239,18 @@ export class EnviosController {
             </div>
             `;
 
-            this.mailService.sendMail(
-                to,
-                subject,
-                htmlBody,
-            );
+            if (
+                to &&
+                (typeof to === "string" || (Array.isArray(to) && to.length > 0))
+            ) {
+                try {
+                    await this.mailService.sendMail(to, subject, htmlBody);
+                } catch (err) {
+                    throw new InternalServerErrorException(
+                        "Failed to send status change notification.",
+                    );
+                }
+            }
         }
 
         return this.enviosService.putEnvio(id, payload);
@@ -264,10 +284,15 @@ export class EnviosController {
 
         const materiais = await this.materiaisService.getMateriaisByEnvio(id);
 
-        if (payload.status != current.status && payload.status === StatusEnvio.CANCELADO) {
-            const to = this.statusRulesService.getStatus(current.status)?.notify;
+        if (
+            payload.status != current.status &&
+            payload.status === StatusEnvio.CANCELADO
+        ) {
+            const to = this.statusRulesService.getStatus(
+                current.status,
+            )?.notify;
 
-            const subject = `CANCELAMENTO - ${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `
+            const subject = `CANCELAMENTO - ${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `;
 
             const escapeHtml = (value: unknown): string =>
                 String(value ?? "")
@@ -317,8 +342,8 @@ export class EnviosController {
             const materiaisRows =
                 materiais.length > 0
                     ? materiais
-                        .map(
-                            (material) => `
+                          .map(
+                              (material) => `
                       <tr>
                           <td style="${cellStyle}">${escapeHtml(formatCell(material.id))}</td>
                           <td style="${cellStyle}">${escapeHtml(formatCell(material.sap))}</td>
@@ -326,8 +351,8 @@ export class EnviosController {
                           <td style="${cellStyle}">${escapeHtml(formatCell(material.quantidade))}</td>
                       </tr>
                   `,
-                        )
-                        .join("")
+                          )
+                          .join("")
                     : `<tr><td style="${cellStyle}" colspan="4">Nenhum material cadastrado.</td></tr>`;
 
             const htmlBody = `
@@ -351,11 +376,18 @@ export class EnviosController {
             </div>
             `;
 
-            this.mailService.sendMail(
-                to,
-                subject,
-                htmlBody,
-            );
+            if (
+                to &&
+                (typeof to === "string" || (Array.isArray(to) && to.length > 0))
+            ) {
+                try {
+                    await this.mailService.sendMail(to, subject, htmlBody);
+                } catch (err) {
+                    throw new InternalServerErrorException(
+                        "Failed to send status change notification.",
+                    );
+                }
+            }
         }
 
         return this.enviosService.putEnvio(id, payload);

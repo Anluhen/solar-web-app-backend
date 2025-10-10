@@ -80,6 +80,9 @@ class MailService implements IMailService {
             }
         } catch (err) {
             console.error("Error while sending mail", err);
+            throw err instanceof Error
+                ? err
+                : new Error("Unexpected error while sending mail");
         }
     }
 }

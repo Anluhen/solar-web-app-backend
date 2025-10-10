@@ -284,7 +284,8 @@ Sample request:
 1. Client sends `PUT /envios/:id` with new `status` and/or fields.
 2. Service preloads entity; unknown id returns `404`.
 3. Invalid `status` value fails DTO enum validation with `400`.
-4. Successful update returns latest entity, enabling optimistic UI updates.
+4. Advancing via `PUT /envios/:id/nextstatus` triggers a notification email; if the mail send fails the API responds with `500` and leaves the envio in its original status.
+5. Successful updates return the latest entity, enabling optimistic UI updates.
 
 ### 3. Material reassignment
 1. Client uses `PUT /materiais/:id` with new `envio_id` when moving material.
