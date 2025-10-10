@@ -140,7 +140,9 @@ export class EnviosController {
         const materiais = await this.materiaisService.getMateriaisByEnvio(id);
 
         if (payload.status != current.status && payload.status === StatusEnvio.SEPARACAO) {
-            const to = this.statusRulesService.getStatus(current.status)?.notify;
+            const to = this.statusRulesService.getStatus(payload.status)?.notify;
+
+            const subject = `${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `
 
             const escapeHtml = (value: unknown): string =>
                 String(value ?? "")
@@ -205,7 +207,7 @@ export class EnviosController {
 
             const htmlBody = `
             <div style="font-family:Arial,Helvetica,sans-serif;color:#1f2933;">
-                <h2 style="margin-bottom:16px;">Atualização do envio ${escapeHtml(formatCell(current.id))}</h2>
+                <h2 style="margin-bottom:16px;">${subject}</h2>
                 <table style="${tableStyle}">
                     <tbody>${envioRows}</tbody>
                 </table>
@@ -224,16 +226,10 @@ export class EnviosController {
             </div>
             `;
 
-            const subject = `${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `
-
             this.mailService.sendMail(
                 to,
                 subject,
                 htmlBody,
-            );
-        } else {
-            throw new BadRequestException(
-                `Status ${current.status} for envio ${current.id} has no e-mail notification to be sent.`,
             );
         }
 
@@ -271,6 +267,8 @@ export class EnviosController {
         if (payload.status != current.status && payload.status === StatusEnvio.CANCELADO) {
             const to = this.statusRulesService.getStatus(current.status)?.notify;
 
+            const subject = `CANCELAMENTO - ${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `
+
             const escapeHtml = (value: unknown): string =>
                 String(value ?? "")
                     .replace(/&/g, "&amp;")
@@ -334,7 +332,7 @@ export class EnviosController {
 
             const htmlBody = `
             <div style="font-family:Arial,Helvetica,sans-serif;color:#1f2933;">
-                <h2 style="margin-bottom:16px;">Atualização do envio ${escapeHtml(formatCell(current.id))}</h2>
+                <h2 style="margin-bottom:16px;">${subject}</h2>
                 <table style="${tableStyle}">
                     <tbody>${envioRows}</tbody>
                 </table>
@@ -353,16 +351,10 @@ export class EnviosController {
             </div>
             `;
 
-            const subject = `CANCELAMENTO - ${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `
-
             this.mailService.sendMail(
                 to,
                 subject,
                 htmlBody,
-            );
-        } else {
-            throw new BadRequestException(
-                `Status ${current.status} for envio ${current.id} has no e-mail notification to be sent.`,
             );
         }
 
