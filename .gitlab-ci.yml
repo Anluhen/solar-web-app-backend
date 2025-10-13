@@ -12,11 +12,10 @@ run:migrations:
   stage: deploy
   image: node:$NODE_VERSION
   script:
-    - test -f typeorm.config.ts && echo "typeorm.config.ts present"
-    - node -e "console.log(process.env.POSTGRES_DATABASE)"
     - npm ci
     - npm run build
-    - npm run migration:run
+    # - npm run migration:run
+    - npm run typeorm -- migration:run --fake
   environment: qas
 
 deploy:qa:
