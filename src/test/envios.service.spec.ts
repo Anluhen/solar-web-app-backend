@@ -5,8 +5,10 @@ import { Repository } from "typeorm";
 import enviosServiceProvider from "../modules/envios/services/envios.service";
 import { IEnviosService } from "../modules/envios/interfaces/envios.service.interface";
 import EnvioEntity from "../modules/envios/entities/envio.entity";
-import { StatusEnvio } from "../modules/envios/rules/status.rules";
+import { StatusEnvio, StatusRulesService } from "../modules/envios/rules/status.rules";
 import EnvioFormDto from "../modules/envios/dtos/envio-form.dto";
+import { IMateriaisService } from "../modules/materiais/interfaces/materiais.service.interface";
+import { IMailService } from "../modules/mail/interfaces/mail.service.interface";
 
 const baseEnvio: EnvioEntity = {
   id: "1",
@@ -57,12 +59,32 @@ describe("Envios Service", () => {
       remove: jest.fn(),
     } as EnviosRepoMock;
 
+    const materiaisServiceMock = {
+      getMateriaisByEnvio: jest.fn().mockResolvedValue([]),
+    };
+
+    const mailServiceMock = {
+      sendMail: jest.fn(),
+    };
+
     const moduleRef = await Test.createTestingModule({
       providers: [
         enviosServiceProvider,
         {
           provide: getRepositoryToken(EnvioEntity, "postgreConnection"),
           useValue: envioRepo,
+        },
+        {
+          provide: IMateriaisService,
+          useValue: materiaisServiceMock,
+        },
+        {
+          provide: StatusRulesService,
+          useValue: new StatusRulesService(),
+        },
+        {
+          provide: IMailService,
+          useValue: mailServiceMock,
         },
       ],
     }).compile();
