@@ -1,5 +1,4 @@
 import {
-    BadRequestException,
     Body,
     Controller,
     Delete,
@@ -15,7 +14,7 @@ import { IMateriaisService } from "../../materiais/interfaces/materiais.service.
 import EnvioFormDto from "../dtos/envio-form.dto";
 import EnvioEntity from "../entities/envio.entity";
 import { IEnviosService } from "../interfaces/envios.service.interface";
-import type { StatusEnvio, StatusRule } from "../rules/status.rules";
+import { StatusEnvio, StatusRule } from "../rules/status.rules";
 import { StatusRulesService } from "../rules/status.rules";
 
 @Controller("envios")
@@ -82,37 +81,55 @@ export class EnviosController {
     }
 
     @Get(":id/status")
+    @ApiOkResponse({
+        schema: {
+            type: "object",
+            properties: {
+                id: { type: "string", enum: Object.values(StatusEnvio) },
+                name: { type: "string" },
+                required: { type: "array", items: { type: "string" } },
+                editable: { type: "array", items: { type: "string" } },
+                next: {
+                    type: "string",
+                    nullable: true,
+                    enum: Object.values(StatusEnvio),
+                },
+                previous: {
+                    type: "string",
+                    nullable: true,
+                    enum: Object.values(StatusEnvio),
+                },
+                notify: {
+                    oneOf: [
+                        { type: "string" },
+                        { type: "array", items: { type: "string" } },
+                    ],
+                    nullable: true,
+                },
+            },
+            required: ["id", "name", "required", "editable"],
+        },
+    })
     async getStatus(@Param("id") id: string): Promise<StatusRule> {
         const envio = await this.enviosService.getEnvio(id);
         return this.statusRulesService.getStatus(envio.status);
     }
 
-    @Put(":id/status")
+    @Put(":id/nextstatus")
     @ApiOkResponse({ type: EnvioEntity })
-    async advanceStatus(
+    advanceStatus(
         @Param("id") id: string,
         @Body() dto: EnvioFormDto,
     ): Promise<EnvioEntity> {
-        const current = await this.enviosService.getEnvio(id);
+        return this.enviosService.advanceStatus(id, dto);
+    }
 
-        const rule = this.statusRulesService.getStatus(current.status);
-        if (!rule?.next) {
-            throw new BadRequestException(
-                `Status ${current.status} cannot transition to another state.`,
-            );
-        }
-
-        if (dto.status && dto.status !== current.status) {
-            throw new BadRequestException(
-                `Payload status ${dto.status} does not match envio status ${current.status}.`,
-            );
-        }
-
-        const payload: EnvioFormDto = {
-            ...dto,
-            status: rule.next,
-        };
-
-        return this.enviosService.putEnvio(id, payload);
+    @Put(":id/prevstatus")
+    @ApiOkResponse({ type: EnvioEntity })
+    returnStatus(
+        @Param("id") id: string,
+        @Body() dto: EnvioFormDto,
+    ): Promise<EnvioEntity> {
+        return this.enviosService.returnStatus(id, dto);
     }
 }

@@ -6,6 +6,7 @@ import enviosServiceProvider from "./services/envios.service";
 import { StatusRulesService } from "./rules/status.rules";
 import { EnviosController } from "./controllers/envios.controller";
 import MateriaisModule from "../materiais/materiais.module";
+import mailServiceProvider from "../mail/services/mail.service";
 
 @Module({
     imports: [
@@ -13,7 +14,7 @@ import MateriaisModule from "../materiais/materiais.module";
         MateriaisModule,
     ],
     controllers: [EnviosController],
-    providers: [enviosServiceProvider, StatusRulesService],
+    providers: [enviosServiceProvider, StatusRulesService, mailServiceProvider],
     exports: [TypeOrmModule, enviosServiceProvider],
 })
 export default class EnviosModule {}
