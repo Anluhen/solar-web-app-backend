@@ -191,17 +191,13 @@ class EnviosService implements IEnviosService {
         const cellStyle = "padding:8px;border:1px solid #d0d7de;";
 
         const envioDetails: Array<[string, unknown]> = [
-            ["Envio ID", current.id],
             ["Status atual", current.status],
-            ["Próximo status", nextStatus],
             ["PEP", current.pep],
             ["ZVGP", current.zvgp],
             ["Gerador", current.gerador],
             ["UFV", current.ufv],
             ["Observações", current.observacoes ?? ""],
-            ["Data de separação", current.separacao],
-            ["Criado em", current.created_at],
-            ["Atualizado em", current.updated_at],
+            ["Data de separação", this.formatSeparationDate(current.separacao)],
         ];
 
         const envioRows = envioDetails
@@ -221,7 +217,6 @@ class EnviosService implements IEnviosService {
                       .map(
                           (material) => `
                       <tr>
-                          <td style="${cellStyle}">${this.escapeHtml(this.formatCell(material.id))}</td>
                           <td style="${cellStyle}">${this.escapeHtml(this.formatCell(material.sap))}</td>
                           <td style="${cellStyle}">${this.escapeHtml(this.formatCell(material.descricao))}</td>
                           <td style="${cellStyle}">${this.escapeHtml(this.formatCell(material.quantidade))}</td>
@@ -229,7 +224,7 @@ class EnviosService implements IEnviosService {
                   `,
                       )
                       .join("")
-                : `<tr><td style="${cellStyle}" colspan="4">Nenhum material cadastrado.</td></tr>`;
+                : `<tr><td style="${cellStyle}" colspan="3">Nenhum material cadastrado.</td></tr>`;
 
         return `
             <div style="font-family:Arial,Helvetica,sans-serif;color:#1f2933;">
@@ -241,7 +236,6 @@ class EnviosService implements IEnviosService {
                 <table style="${tableStyle}">
                     <thead>
                         <tr>
-                            <th style="${headerCellStyle}">ID</th>
                             <th style="${headerCellStyle}">SAP</th>
                             <th style="${headerCellStyle}">Descrição</th>
                             <th style="${headerCellStyle}">Quantidade</th>
@@ -265,6 +259,46 @@ class EnviosService implements IEnviosService {
     private formatCell(value: unknown): string {
         if (value === null || value === undefined) return "";
         if (value instanceof Date) return value.toISOString();
+        return String(value);
+    }
+
+    private formatSeparationDate(value: unknown): string {
+        if (value === null || value === undefined || value === "") return "";
+
+        const formatDate = (date: Date): string => {
+            const day = String(date.getUTCDate()).padStart(2, "0");
+            const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+            const year = String(date.getUTCFullYear());
+            return `${day}/${month}/${year}`;
+        };
+
+        if (value instanceof Date) {
+            return formatDate(value);
+        }
+
+        if (typeof value === "number") {
+            const parsed = new Date(value);
+            if (!Number.isNaN(parsed.getTime())) {
+                return formatDate(parsed);
+            }
+        }
+
+        if (typeof value === "string") {
+            const trimmed = value.trim();
+            const dateOnlyMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (dateOnlyMatch) {
+                const [, year, month, day] = dateOnlyMatch;
+                return `${day}/${month}/${year}`;
+            }
+
+            const parsed = new Date(trimmed);
+            if (!Number.isNaN(parsed.getTime())) {
+                return formatDate(parsed);
+            }
+
+            return trimmed;
+        }
+
         return String(value);
     }
 
