@@ -191,7 +191,6 @@ class EnviosService implements IEnviosService {
         const cellStyle = "padding:8px;border:1px solid #d0d7de;";
 
         const envioDetails: Array<[string, unknown]> = [
-            ["Status atual", current.status],
             ["PEP", current.pep],
             ["ZVGP", current.zvgp],
             ["Gerador", current.gerador],
