@@ -1,7 +1,6 @@
 import { Injectable, ClassProvider } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import { createTransport, getTestMessageUrl, Transporter } from "nodemailer";
-import SMTPTransport from "nodemailer/lib/smtp-transport";
 import { IMailService } from "../interfaces/mail.service.interface";
 import ENV_VARIABLE_NAMES from "src/utils/env_variable_names";
 
@@ -42,7 +41,7 @@ class MailService implements IMailService {
             },
         };
 
-        console.log("Transport created in host: %s:%s", mailOptions.host, mailOptions.host);
+        console.log("Transport created in host: %s:%s", mailOptions.host, mailOptions.port);
         this.transporter = createTransport(mailOptions);
         this.usesTestAccount = false;
         // return;

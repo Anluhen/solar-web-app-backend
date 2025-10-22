@@ -6,6 +6,7 @@ import PostgresModule from "./modules/postgres/postgres.module";
 import StaffModule from "./modules/staff/staff.module";
 import EnviosModule from "./modules/envios/envios.module";
 import MateriaisModule from "./modules/materiais/materiais.module";
+import MailModule from "./modules/mail/mail.module";
 
 @Module({
     imports: [
@@ -16,6 +17,7 @@ import MateriaisModule from "./modules/materiais/materiais.module";
         StaffModule,
         EnviosModule,
         MateriaisModule,
+        MailModule,
     ],
 })
 export class AppModule { }

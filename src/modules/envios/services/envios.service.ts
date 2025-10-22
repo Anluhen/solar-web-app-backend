@@ -1,6 +1,7 @@
 import {
     BadRequestException,
     ClassProvider,
+    Inject,
     Injectable,
     InternalServerErrorException,
     NotFoundException,
@@ -22,7 +23,7 @@ class EnviosService implements IEnviosService {
         private readonly repo: Repository<EnvioEntity>,
         private readonly materiaisService: IMateriaisService,
         private readonly statusRulesService: StatusRulesService,
-        private readonly mailService: IMailService,
+        @Inject(IMailService) private readonly mailService: IMailService,
     ) {}
 
     async postEnvio(dto: EnvioFormDto): Promise<EnvioEntity> {
