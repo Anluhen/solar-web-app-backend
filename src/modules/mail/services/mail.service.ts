@@ -16,6 +16,7 @@ class MailService implements IMailService {
         );
 
         if (configuredHost) {
+            console.log("Creating transport...")
             const configuredPort = Number(
                 this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_PORT),
             );
@@ -24,10 +25,10 @@ class MailService implements IMailService {
                 throw new Error("MAIL_PORT must be a valid number");
             }
 
-            const smtpOptions: SMTPTransport.Options = {
+            const mailOptions = {
                 host: configuredHost,
                 port: configuredPort,
-                secure: configuredPort === 465,
+                secure: false,
                 auth: {
                     user: this.configService.getOrThrow(
                         ENV_VARIABLE_NAMES.MAIL_USERNAME,
@@ -36,13 +37,18 @@ class MailService implements IMailService {
                         ENV_VARIABLE_NAMES.MAIL_PASSWORD,
                     ),
                 },
+                tls: {
+                    rejectUnauthorized: false,
+                },
             };
 
-            this.transporter = createTransport(smtpOptions);
+            console.log("Transport created in host: %s:%s", mailOptions.host, mailOptions.host);
+            this.transporter = createTransport(mailOptions);
             this.usesTestAccount = false;
             return;
         }
 
+        console.log("Creating test transport...")
         const testAccountOptions: SMTPTransport.Options = {
             host: "smtp.ethereal.email",
             port: 587,
@@ -53,6 +59,7 @@ class MailService implements IMailService {
             },
         };
 
+        console.log("Test transport created in host: %s:%s", testAccountOptions.host, testAccountOptions.host);
         this.transporter = createTransport(testAccountOptions);
         this.usesTestAccount = true;
     }
@@ -64,6 +71,7 @@ class MailService implements IMailService {
         text?: string,
     ): Promise<void> {
         try {
+            console.log("Sending mail...")
             const info = await this.transporter.sendMail({
                 from: this.configService.getOrThrow(
                     ENV_VARIABLE_NAMES.MAIL_FROM,
