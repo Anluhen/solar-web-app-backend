@@ -15,53 +15,53 @@ class MailService implements IMailService {
             ENV_VARIABLE_NAMES.MAIL_HOST,
         );
 
-        if (configuredHost) {
-            console.log("Creating transport...")
-            const configuredPort = Number(
-                this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_PORT),
-            );
+        // if (configuredHost) {
+        console.log("Creating transport...")
+        const configuredPort = Number(
+            this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_PORT),
+        );
 
-            if (Number.isNaN(configuredPort)) {
-                throw new Error("MAIL_PORT must be a valid number");
-            }
-
-            const mailOptions = {
-                host: configuredHost,
-                port: configuredPort,
-                secure: false,
-                auth: {
-                    user: this.configService.getOrThrow(
-                        ENV_VARIABLE_NAMES.MAIL_USERNAME,
-                    ),
-                    pass: this.configService.getOrThrow(
-                        ENV_VARIABLE_NAMES.MAIL_PASSWORD,
-                    ),
-                },
-                tls: {
-                    rejectUnauthorized: false,
-                },
-            };
-
-            console.log("Transport created in host: %s:%s", mailOptions.host, mailOptions.host);
-            this.transporter = createTransport(mailOptions);
-            this.usesTestAccount = false;
-            return;
+        if (Number.isNaN(configuredPort)) {
+            throw new Error("MAIL_PORT must be a valid number");
         }
 
-        console.log("Creating test transport...")
-        const testAccountOptions: SMTPTransport.Options = {
-            host: "smtp.ethereal.email",
-            port: 587,
+        const mailOptions = {
+            host: configuredHost,
+            port: configuredPort,
             secure: false,
             auth: {
-                user: "bernadette.bradtke84@ethereal.email",
-                pass: "zhst7ucu5Zsc2n5Ucu",
+                user: this.configService.getOrThrow(
+                    ENV_VARIABLE_NAMES.MAIL_USERNAME,
+                ),
+                pass: this.configService.getOrThrow(
+                    ENV_VARIABLE_NAMES.MAIL_PASSWORD,
+                ),
+            },
+            tls: {
+                rejectUnauthorized: false,
             },
         };
 
-        console.log("Test transport created in host: %s:%s", testAccountOptions.host, testAccountOptions.host);
-        this.transporter = createTransport(testAccountOptions);
-        this.usesTestAccount = true;
+        console.log("Transport created in host: %s:%s", mailOptions.host, mailOptions.host);
+        this.transporter = createTransport(mailOptions);
+        this.usesTestAccount = false;
+        // return;
+        // }
+
+        // console.log("Creating test transport...")
+        // const testAccountOptions: SMTPTransport.Options = {
+        //     host: "smtp.ethereal.email",
+        //     port: 587,
+        //     secure: false,
+        //     auth: {
+        //         user: "bernadette.bradtke84@ethereal.email",
+        //         pass: "zhst7ucu5Zsc2n5Ucu",
+        //     },
+        // };
+
+        // console.log("Test transport created in host: %s:%s", testAccountOptions.host, testAccountOptions.host);
+        // this.transporter = createTransport(testAccountOptions);
+        // this.usesTestAccount = true;
     }
 
     async sendMail(
