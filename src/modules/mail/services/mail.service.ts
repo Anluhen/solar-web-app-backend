@@ -14,7 +14,6 @@ class MailService implements IMailService {
             ENV_VARIABLE_NAMES.MAIL_HOST,
         );
 
-        // if (configuredHost) {
         console.log("Creating transport...")
         const configuredPort = Number(
             this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_PORT),
@@ -44,8 +43,6 @@ class MailService implements IMailService {
         console.log("Transport created in host: %s:%s", mailOptions.host, mailOptions.port);
         this.transporter = createTransport(mailOptions);
         this.usesTestAccount = false;
-        // return;
-        // }
 
         // console.log("Creating test transport...")
         // const testAccountOptions: SMTPTransport.Options = {
@@ -70,7 +67,11 @@ class MailService implements IMailService {
         text?: string,
     ): Promise<void> {
         try {
-            console.log("Sending mail...")
+            console.log("Sending mail from %s:%s", this.configService.getOrThrow(
+                ENV_VARIABLE_NAMES.MAIL_HOST,
+            ), this.configService.getOrThrow(
+                ENV_VARIABLE_NAMES.MAIL_FROM,
+            ))
             const info = await this.transporter.sendMail({
                 from: this.configService.getOrThrow(
                     ENV_VARIABLE_NAMES.MAIL_FROM,
