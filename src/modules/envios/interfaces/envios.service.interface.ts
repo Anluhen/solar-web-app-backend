@@ -12,6 +12,7 @@ export abstract class IEnviosService {
             zvgp?: string;
             gerador?: string;
             ufv?: string;
+            status?: string;
         };
     }): Promise<EnvioEntity[]>;
     abstract getEnvio(id: string): Promise<EnvioEntity>;
