@@ -40,9 +40,10 @@ export class EnviosController {
         @Query("zvgp") zvgp?: string,
         @Query("gerador") gerador?: string,
         @Query("ufv") ufv?: string,
+        @Query("status") status?: string,
     ): Promise<EnvioEntity[]> {
         return this.enviosService.getEnvios({
-            filters: { id, pep, zvgp, gerador, ufv },
+            filters: { id, pep, zvgp, gerador, ufv, status },
         });
     }
 

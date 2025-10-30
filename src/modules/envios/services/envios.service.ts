@@ -39,6 +39,7 @@ class EnviosService implements IEnviosService {
             zvgp?: string;
             gerador?: string;
             ufv?: string;
+            status?: string,
         };
     }): Promise<EnvioEntity[]> {
         const qb = this.repo.createQueryBuilder("envio");
@@ -63,6 +64,11 @@ class EnviosService implements IEnviosService {
         }
         if (f.ufv && f.ufv.trim() !== "") {
             qb.andWhere("envio.ufv ILIKE :ufv", { ufv: `%${f.ufv.trim()}%` });
+        }
+        if (f.status && f.status.trim() !== "") {
+            qb.andWhere("envio.status ILIKE :status", {
+                status: `%${f.status.trim()}%`,
+            });
         }
 
         // materiais are fetched via a dedicated endpoint; no relation join here
