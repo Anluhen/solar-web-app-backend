@@ -18,6 +18,6 @@ export abstract class IEnviosService {
     abstract getEnvio(id: string): Promise<EnvioEntity>;
     abstract putEnvio(id: string, dto: EnvioFormDto): Promise<EnvioEntity>;
     abstract deleteEnvio(id: string): Promise<EnvioEntity>;
-    abstract advanceStatus(id: string, dto: EnvioFormDto): Promise<EnvioEntity>;
-    abstract returnStatus(id: string, dto: EnvioFormDto): Promise<EnvioEntity>;
+    abstract advanceStatus(id: string, dto: EnvioFormDto, userEmail: string): Promise<EnvioEntity>;
+    abstract returnStatus(id: string, dto: EnvioFormDto, userEmail: string): Promise<EnvioEntity>;
 }

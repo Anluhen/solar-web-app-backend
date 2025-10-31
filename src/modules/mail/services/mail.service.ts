@@ -23,6 +23,8 @@ class MailService implements IMailService {
             throw new Error("MAIL_PORT must be a valid number");
         }
 
+        const isDev = this.configService.getOrThrow(ENV_VARIABLE_NAMES.NODE_ENV) === "development";
+
         const mailOptions = {
             host: configuredHost,
             port: configuredPort,
@@ -40,42 +42,49 @@ class MailService implements IMailService {
             },
         };
 
-        console.log("Transport created in host: %s:%s", mailOptions.host, mailOptions.port);
-        this.transporter = createTransport(mailOptions);
-        this.usesTestAccount = false;
+        const testOptions = {
+            host: "smtp.ethereal.email",
+            port: 587,
+            secure: false,
+            auth: {
+                user: "bernadette.bradtke84@ethereal.email",
+                pass: "zhst7ucu5Zsc2n5Ucu",
+            },
+        };
 
-        // console.log("Creating test transport...")
-        // const testAccountOptions: SMTPTransport.Options = {
-        //     host: "smtp.ethereal.email",
-        //     port: 587,
-        //     secure: false,
-        //     auth: {
-        //         user: "bernadette.bradtke84@ethereal.email",
-        //         pass: "zhst7ucu5Zsc2n5Ucu",
-        //     },
-        // };
+        const options = isDev ? testOptions : mailOptions;
 
-        // console.log("Test transport created in host: %s:%s", testAccountOptions.host, testAccountOptions.host);
-        // this.transporter = createTransport(testAccountOptions);
-        // this.usesTestAccount = true;
+        this.transporter = createTransport(options);
+        this.usesTestAccount = isDev;
+
+        if (isDev) {
+            console.log("Test transport created in host: %s:%s", testOptions.host, testOptions.host);
+
+        } else {
+            console.log("Transport created in host: %s:%s", mailOptions.host, mailOptions.port);
+        }
     }
 
     async sendMail(
         to: string | string[],
         subject: string,
         html: string,
+        userEmail: string,
         text?: string,
     ): Promise<void> {
         try {
-            console.log("Sending mail from %s:%s", this.configService.getOrThrow(
+            const sender = userEmail;
+
+            console.log("Sending mail from host: %s", this.configService.getOrThrow(
                 ENV_VARIABLE_NAMES.MAIL_HOST,
-            ), this.configService.getOrThrow(
-                ENV_VARIABLE_NAMES.MAIL_FROM,
-            ))
+            ));
+            console.log("Sending mail from user: %s", this.configService.getOrThrow(
+                ENV_VARIABLE_NAMES.MAIL_USERNAME,
+            ));
+            console.log("Sending mail as %s", sender);
+
             const info = await this.transporter.sendMail({
-                from: this.configService.getOrThrow(
-                    ENV_VARIABLE_NAMES.MAIL_FROM,
-                ),
+                from: sender,
                 to,
                 subject,
                 html,
