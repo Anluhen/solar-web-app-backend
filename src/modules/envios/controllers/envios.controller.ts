@@ -7,6 +7,7 @@ import {
     Post,
     Put,
     Query,
+    Headers,
 } from "@nestjs/common";
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import MaterialEntity from "../../materiais/entities/material.entity";
@@ -121,8 +122,9 @@ export class EnviosController {
     advanceStatus(
         @Param("id") id: string,
         @Body() dto: EnvioFormDto,
+        @Headers("x-user-email") userEmail: string,
     ): Promise<EnvioEntity> {
-        return this.enviosService.advanceStatus(id, dto);
+        return this.enviosService.advanceStatus(id, dto, userEmail);
     }
 
     @Put(":id/prevstatus")
@@ -130,7 +132,8 @@ export class EnviosController {
     returnStatus(
         @Param("id") id: string,
         @Body() dto: EnvioFormDto,
+        @Headers("x-user-email") userEmail: string,
     ): Promise<EnvioEntity> {
-        return this.enviosService.returnStatus(id, dto);
+        return this.enviosService.returnStatus(id, dto, userEmail);
     }
 }
