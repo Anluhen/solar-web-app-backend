@@ -84,7 +84,8 @@ class MailService implements IMailService {
             console.log("Sending mail as %s", sender);
 
             const info = await this.transporter.sendMail({
-                from: sender,
+                from: ENV_VARIABLE_NAMES.MAIL_USERNAME,
+                cc: sender,
                 to,
                 subject,
                 html,
