@@ -80,7 +80,7 @@ describe("Envios Service", () => {
         },
         {
           provide: StatusRulesService,
-          useValue: new StatusRulesService(),
+          useValue: new StatusRulesService({} as any),
         },
         {
           provide: IMailService,
