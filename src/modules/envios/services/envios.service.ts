@@ -30,9 +30,8 @@ class EnviosService implements IEnviosService {
         @Inject(IMailService) private readonly mailService: IMailService,
         private readonly configService: ConfigService,
     ) {
-        this.isProd =
-            this.configService.getOrThrow(ENV_VARIABLE_NAMES.NODE_ENV) ===
-            "production";
+        const nodeEnv = (this.configService.get(ENV_VARIABLE_NAMES.NODE_ENV) || "").trim().toLowerCase();
+        this.isProd = nodeEnv === "production";
     }
 
     async postEnvio(dto: EnvioFormDto): Promise<EnvioEntity> {
@@ -142,7 +141,7 @@ class EnviosService implements IEnviosService {
             );
 
             // In non-production environments, require frontend confirmation
-            if (!(dto as any).confirmed) {
+            if (!this.isProd && !(dto as any).confirmed) {
                 throw new BadRequestException({
                     message: "EMAIL_CONFIRMATION_REQUIRED",
                     emailData: {

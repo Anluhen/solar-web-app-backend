@@ -93,9 +93,10 @@ export class StatusRulesService {
     private readonly statusRules: Record<StatusEnvio, StatusRule>;
 
     constructor(private readonly configService: ConfigService) {
-        this.isProd =
-            this.configService.getOrThrow(ENV_VARIABLE_NAMES.NODE_ENV) ===
-            "production";
+        const nodeEnv = (this.configService.get(ENV_VARIABLE_NAMES.NODE_ENV) || "").trim().toLowerCase();
+        this.isProd = nodeEnv === "production";
+        
+        console.log(`[StatusRulesService] NODE_ENV: "${nodeEnv}", isProd: ${this.isProd}`);
 
         this.statusRules = {
             ...STATUS_RULES,
