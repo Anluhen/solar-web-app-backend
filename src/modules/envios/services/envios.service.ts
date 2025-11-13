@@ -39,7 +39,7 @@ class EnviosService implements IEnviosService {
             zvgp?: string;
             gerador?: string;
             ufv?: string;
-            status?: string,
+            status?: string;
         };
     }): Promise<EnvioEntity[]> {
         const qb = this.repo.createQueryBuilder("envio");
@@ -90,7 +90,11 @@ class EnviosService implements IEnviosService {
         return this.repo.save(entity);
     }
 
-    async advanceStatus(id: string, dto: EnvioFormDto, userEmail: string): Promise<EnvioEntity> {
+    async advanceStatus(
+        id: string,
+        dto: EnvioFormDto,
+        userEmail: string,
+    ): Promise<EnvioEntity> {
         const current = await this.getEnvio(id);
 
         const rule = this.statusRulesService.getStatus(current.status);
@@ -134,7 +138,11 @@ class EnviosService implements IEnviosService {
         return this.putEnvio(id, payload);
     }
 
-    async returnStatus(id: string, dto: EnvioFormDto, userEmail: string): Promise<EnvioEntity> {
+    async returnStatus(
+        id: string,
+        dto: EnvioFormDto,
+        userEmail: string,
+    ): Promise<EnvioEntity> {
         const current = await this.getEnvio(id);
 
         const rule = this.statusRulesService.getStatus(current.status);
@@ -325,7 +333,12 @@ class EnviosService implements IEnviosService {
         }
 
         try {
-            await this.mailService.sendMail(recipients, subject, htmlBody, userEmail);
+            await this.mailService.sendMail(
+                recipients,
+                subject,
+                htmlBody,
+                userEmail,
+            );
         } catch {
             throw new InternalServerErrorException(
                 "Failed to send status change notification.",

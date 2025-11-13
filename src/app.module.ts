@@ -20,4 +20,4 @@ import MailModule from "./modules/mail/mail.module";
         MailModule,
     ],
 })
-export class AppModule { }
+export class AppModule {}

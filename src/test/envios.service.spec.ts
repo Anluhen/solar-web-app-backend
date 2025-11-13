@@ -5,7 +5,10 @@ import { Repository } from "typeorm";
 import enviosServiceProvider from "../modules/envios/services/envios.service";
 import { IEnviosService } from "../modules/envios/interfaces/envios.service.interface";
 import EnvioEntity from "../modules/envios/entities/envio.entity";
-import { StatusEnvio, StatusRulesService } from "../modules/envios/rules/status.rules";
+import {
+  StatusEnvio,
+  StatusRulesService,
+} from "../modules/envios/rules/status.rules";
 import EnvioFormDto from "../modules/envios/dtos/envio-form.dto";
 import { IMateriaisService } from "../modules/materiais/interfaces/materiais.service.interface";
 import { IMailService } from "../modules/mail/interfaces/mail.service.interface";
@@ -67,11 +70,18 @@ describe("Envios Service", () => {
       sendMail: jest.fn(),
     };
 
+    const configServiceMock = {
+      getOrThrow: jest.fn().mockReturnValue("development"),
+    };
+
     const moduleRef = await Test.createTestingModule({
       providers: [
         enviosServiceProvider,
         {
-          provide: getRepositoryToken(EnvioEntity, "postgreConnection"),
+          provide: getRepositoryToken(
+            EnvioEntity,
+            "postgreConnection",
+          ),
           useValue: envioRepo,
         },
         {
@@ -80,7 +90,7 @@ describe("Envios Service", () => {
         },
         {
           provide: StatusRulesService,
-          useValue: new StatusRulesService(),
+          useValue: new StatusRulesService(configServiceMock as any),
         },
         {
           provide: IMailService,
@@ -114,7 +124,11 @@ describe("Envios Service", () => {
       separacao: baseEnvio.separacao,
     };
 
-    const savedEnvio = { ...baseEnvio, status: StatusEnvio.ENVIADO, ufv: dto.ufv };
+    const savedEnvio = {
+      ...baseEnvio,
+      status: StatusEnvio.ENVIADO,
+      ufv: dto.ufv,
+    };
     envioRepo.create.mockReturnValue(savedEnvio);
     envioRepo.save.mockResolvedValue(savedEnvio);
 
@@ -150,11 +164,25 @@ describe("Envios Service", () => {
 
     await enviosService.getEnvios({ filters });
 
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith("envio.id = :id", { id: filters.id });
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith("envio.pep ILIKE :pep", { pep: `%${filters.pep}%` });
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith("envio.zvgp ILIKE :zvgp", { zvgp: `%${filters.zvgp}%` });
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith("envio.gerador ILIKE :gerador", { gerador: `%${filters.gerador}%` });
-    expect(queryBuilder.andWhere).toHaveBeenCalledWith("envio.ufv ILIKE :ufv", { ufv: `%${filters.ufv}%` });
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith("envio.id = :id", {
+      id: filters.id,
+    });
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      "envio.pep ILIKE :pep",
+      { pep: `%${filters.pep}%` },
+    );
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      "envio.zvgp ILIKE :zvgp",
+      { zvgp: `%${filters.zvgp}%` },
+    );
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      "envio.gerador ILIKE :gerador",
+      { gerador: `%${filters.gerador}%` },
+    );
+    expect(queryBuilder.andWhere).toHaveBeenCalledWith(
+      "envio.ufv ILIKE :ufv",
+      { ufv: `%${filters.ufv}%` },
+    );
   });
 
   it("Get Envio", async () => {
@@ -162,7 +190,9 @@ describe("Envios Service", () => {
 
     const response = await enviosService.getEnvio(baseEnvio.id);
 
-    expect(envioRepo.findOne).toHaveBeenCalledWith({ where: { id: baseEnvio.id } });
+    expect(envioRepo.findOne).toHaveBeenCalledWith({
+      where: { id: baseEnvio.id },
+    });
     expect(response).toEqual(baseEnvio);
   });
 
@@ -181,7 +211,10 @@ describe("Envios Service", () => {
 
     const response = await enviosService.putEnvio(baseEnvio.id, dto);
 
-    expect(envioRepo.preload).toHaveBeenCalledWith({ id: baseEnvio.id, ...dto });
+    expect(envioRepo.preload).toHaveBeenCalledWith({
+      id: baseEnvio.id,
+      ...dto,
+    });
     expect(envioRepo.save).toHaveBeenCalledWith(preloaded);
     expect(response).toEqual(preloaded);
   });
@@ -192,7 +225,9 @@ describe("Envios Service", () => {
 
     const response = await enviosService.deleteEnvio(baseEnvio.id);
 
-    expect(envioRepo.findOne).toHaveBeenCalledWith({ where: { id: baseEnvio.id } });
+    expect(envioRepo.findOne).toHaveBeenCalledWith({
+      where: { id: baseEnvio.id },
+    });
     expect(envioRepo.remove).toHaveBeenCalledWith(baseEnvio);
     expect(response).toEqual(baseEnvio);
   });

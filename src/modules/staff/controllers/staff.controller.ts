@@ -16,7 +16,7 @@ import { IStaffService } from "../interfaces/staff.service.interface";
 @Controller("api/postgres/staff")
 @ApiTags("PostgreSql")
 export class StaffController {
-    constructor(private readonly staffsService: IStaffService) { }
+    constructor(private readonly staffsService: IStaffService) {}
 
     @Post()
     @ApiCreatedResponse({ type: StaffEntity })
@@ -39,7 +39,9 @@ export class StaffController {
     }
     @Delete(":id")
     @ApiOkResponse({ type: StaffEntity })
-    async deleteItem(@Param("id", ParseIntPipe) id: number): Promise<StaffEntity> {
+    async deleteItem(
+        @Param("id", ParseIntPipe) id: number,
+    ): Promise<StaffEntity> {
         return this.staffsService.deleteStaff(id);
     }
 }

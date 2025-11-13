@@ -3,7 +3,7 @@ import { ApiExcludeController } from "@nestjs/swagger";
 @ApiExcludeController()
 @Controller("/health")
 export class HealthController {
-    constructor() { }
+    constructor() {}
     @Get("/liveness")
     livenessProbe() {
         return { status: "ok" };

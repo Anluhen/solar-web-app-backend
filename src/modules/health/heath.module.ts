@@ -4,4 +4,4 @@ import { HealthController } from "./controllers/health.controller";
 @Module({
     controllers: [HealthController],
 })
-export default class HealthModule { }
+export default class HealthModule {}

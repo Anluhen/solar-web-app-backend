@@ -3,7 +3,6 @@ import ItemEntity from "../entities/item.entity";
 import ItemFormDto from "../dtos/item-form.dto";
 import { IItemsService } from "../interfaces/items.service.interface";
 
-
 @Injectable()
 class ItemsService implements IItemsService {
     private items: Map<number, ItemEntity> = new Map();

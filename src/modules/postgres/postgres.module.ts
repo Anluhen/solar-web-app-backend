@@ -19,10 +19,12 @@ const PostgresModule = TypeOrmModule.forRootAsync({
         password: configService.getOrThrow(
             ENV_VARIABLE_NAMES.POSTGRES_PASSWORD,
         ),
-        database: configService.getOrThrow(ENV_VARIABLE_NAMES.POSTGRES_DATABASE),
+        database: configService.getOrThrow(
+            ENV_VARIABLE_NAMES.POSTGRES_DATABASE,
+        ),
         autoLoadEntities: true,
         synchronize: false,
-        migrations: ['src/migrations/*.ts'],
+        migrations: ["src/migrations/*.ts"],
     }),
 });
 

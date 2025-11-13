@@ -4,10 +4,9 @@ import staffServiceProvider from "./services/staff.service";
 import { TypeOrmModule } from "@nestjs/typeorm";
 import StaffEntity from "./entities/staff.entity";
 
-
 @Module({
     imports: [TypeOrmModule.forFeature([StaffEntity], "postgreConnection")],
     controllers: [StaffController],
     providers: [staffServiceProvider],
 })
-export default class StaffModule { }
+export default class StaffModule {}

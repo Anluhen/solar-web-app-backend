@@ -1,4 +1,6 @@
 import { Injectable } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
+import ENV_VARIABLE_NAMES from "../../../utils/env_variable_names";
 
 export enum StatusEnvio {
     RASCUNHO = "RASCUNHO",
@@ -57,7 +59,7 @@ export const STATUS_RULES: Record<StatusEnvio, StatusRule> = {
         name: "Separação",
         required: ["separacao"],
         editable: ["separacao", "observacoes"],
-        notify: "e-henchenski@weg.net",
+        notify: ["kamila@weg.net", "dihego@weg.net", "mmazzucco@weg.net"],
         previous: StatusEnvio.CANCELADO,
     },
     CANCELADO: {
@@ -87,12 +89,31 @@ const DEFAULT_STATUS_RULE: StatusRule = {
 
 @Injectable()
 export class StatusRulesService {
+    private readonly isProd: boolean;
+    private readonly statusRules: Record<StatusEnvio, StatusRule>;
+
+    constructor(private readonly configService: ConfigService) {
+        this.isProd =
+            this.configService.getOrThrow(ENV_VARIABLE_NAMES.NODE_ENV) ===
+            "production";
+
+        this.statusRules = {
+            ...STATUS_RULES,
+            [StatusEnvio.SEPARACAO]: {
+                ...STATUS_RULES[StatusEnvio.SEPARACAO],
+                notify: !this.isProd
+                    ? ["e-henchenski@weg.net", "e-henchenski@weg.net"]
+                    : STATUS_RULES[StatusEnvio.SEPARACAO].notify,
+            },
+        };
+    }
+
     getAllRules(): StatusRule[] {
-        return Object.values(STATUS_RULES);
+        return Object.values(this.statusRules);
     }
 
     getStatus(status?: StatusEnvio): StatusRule {
         if (!status) return DEFAULT_STATUS_RULE;
-        return STATUS_RULES[status] ?? DEFAULT_STATUS_RULE;
+        return this.statusRules[status] ?? DEFAULT_STATUS_RULE;
     }
 }

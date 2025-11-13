@@ -1,8 +1,8 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from "typeorm";
 
 export class InitialSchema20240101000000 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`
       CREATE TABLE "envios" (
         "id" BIGSERIAL PRIMARY KEY,
         "pep" text NOT NULL,
@@ -16,19 +16,23 @@ export class InitialSchema20240101000000 implements MigrationInterface {
       );
     `);
 
-    await queryRunner.query(`
+        await queryRunner.query(`
       ALTER TABLE "envios"
       ADD CONSTRAINT "envios_status_check"
       CHECK ("status" IN ('RASCUNHO','ENVIADO','CANCELADO'));
     `);
 
-    await queryRunner.query(
-      'CREATE INDEX "envios_gerador_idx" ON "envios" ("gerador")',
-    );
-    await queryRunner.query('CREATE INDEX "envios_pep_idx" ON "envios" ("pep")');
-    await queryRunner.query('CREATE INDEX "envios_zvgp_idx" ON "envios" ("zvgp")');
+        await queryRunner.query(
+            'CREATE INDEX "envios_gerador_idx" ON "envios" ("gerador")',
+        );
+        await queryRunner.query(
+            'CREATE INDEX "envios_pep_idx" ON "envios" ("pep")',
+        );
+        await queryRunner.query(
+            'CREATE INDEX "envios_zvgp_idx" ON "envios" ("zvgp")',
+        );
 
-    await queryRunner.query(`
+        await queryRunner.query(`
       CREATE TABLE "materiais" (
         "id" BIGSERIAL PRIMARY KEY,
         "envio_id" bigint NOT NULL,
@@ -42,10 +46,10 @@ export class InitialSchema20240101000000 implements MigrationInterface {
           ON DELETE CASCADE
       );
     `);
-  }
+    }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query('DROP TABLE IF EXISTS "materiais"');
-    await queryRunner.query('DROP TABLE IF EXISTS "envios"');
-  }
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query('DROP TABLE IF EXISTS "materiais"');
+        await queryRunner.query('DROP TABLE IF EXISTS "envios"');
+    }
 }

@@ -12,7 +12,8 @@ import mailServiceProvider from "../mail/services/mail.service";
 @Module({
     imports: [
         TypeOrmModule.forFeature([Envio, MaterialEntity], "postgreConnection"),
-        MateriaisModule, MailModule,
+        MateriaisModule,
+        MailModule,
     ],
     controllers: [EnviosController],
     providers: [enviosServiceProvider, StatusRulesService],
