@@ -72,6 +72,7 @@ describe("Envios Service", () => {
     };
 
     const configServiceMock = {
+      get: jest.fn().mockReturnValue("development"),
       getOrThrow: jest.fn().mockReturnValue("development"),
     };
 
