@@ -16,7 +16,7 @@ import { IItemsService } from "../interfaces/items.service.interface";
 @Controller("api/items")
 @ApiTags("Items")
 export class ItemsController {
-    constructor(private readonly itemsService: IItemsService) { }
+    constructor(private readonly itemsService: IItemsService) {}
 
     @Post()
     @ApiCreatedResponse({ type: ItemEntity })
@@ -39,7 +39,9 @@ export class ItemsController {
     }
     @Delete(":id")
     @ApiOkResponse({ type: ItemEntity })
-    async deleteItem(@Param("id", ParseIntPipe) id: number): Promise<ItemEntity> {
+    async deleteItem(
+        @Param("id", ParseIntPipe) id: number,
+    ): Promise<ItemEntity> {
         return this.itemsService.deleteItem(id);
     }
 }

@@ -23,7 +23,7 @@ describe("Items Service", () => {
     beforeAll(async () => {
         const moduleRef = await Test.createTestingModule({
             imports: [ItemsModule],
-       }).compile();
+        }).compile();
 
         itemsService = moduleRef.get<IItemsService>(IItemsService);
 

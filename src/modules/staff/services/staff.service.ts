@@ -10,7 +10,7 @@ class StaffService implements IStaffService {
     constructor(
         @InjectRepository(StaffEntity, "postgreConnection")
         private readonly staffRepository: Repository<StaffEntity>,
-    ) { }
+    ) {}
 
     async postStaff(staff: StaffFormDto): Promise<StaffEntity> {
         const newstaff = await this.staffRepository.insert({
@@ -26,7 +26,6 @@ class StaffService implements IStaffService {
     }
 
     async getStaff(id: number): Promise<StaffEntity> {
-       
         const staff = await this.staffRepository.findOneBy({
             id: id,
         });
@@ -37,7 +36,6 @@ class StaffService implements IStaffService {
     }
 
     async deleteStaff(id: number): Promise<StaffEntity> {
-       
         const staff = await this.getStaff(id);
 
         await this.staffRepository.delete({
@@ -45,7 +43,6 @@ class StaffService implements IStaffService {
         });
 
         return staff;
-       
     }
 
     async putStaff(id: number, newstaff: StaffFormDto): Promise<StaffEntity> {
@@ -55,9 +52,7 @@ class StaffService implements IStaffService {
             {
                 id,
             },
-            {   name: newstaff.name,
-                description: newstaff.description,
-            },
+            { name: newstaff.name, description: newstaff.description },
         );
 
         return {
@@ -65,7 +60,6 @@ class StaffService implements IStaffService {
             name: newstaff.name,
             description: newstaff.description,
         };
-       
     }
 }
 

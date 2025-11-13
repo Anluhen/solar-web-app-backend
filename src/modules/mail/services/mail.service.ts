@@ -14,7 +14,7 @@ class MailService implements IMailService {
             ENV_VARIABLE_NAMES.MAIL_HOST,
         );
 
-        console.log("Creating transport...")
+        console.log("Creating transport...");
         const configuredPort = Number(
             this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_PORT),
         );
@@ -23,7 +23,9 @@ class MailService implements IMailService {
             throw new Error("MAIL_PORT must be a valid number");
         }
 
-        const isDev = this.configService.getOrThrow(ENV_VARIABLE_NAMES.NODE_ENV) === "development";
+        const isDev =
+            this.configService.getOrThrow(ENV_VARIABLE_NAMES.NODE_ENV) ===
+            "development";
 
         const mailOptions = {
             host: configuredHost,
@@ -58,10 +60,17 @@ class MailService implements IMailService {
         this.usesTestAccount = isDev;
 
         if (isDev) {
-            console.log("Test transport created in host: %s:%s", testOptions.host, testOptions.host);
-
+            console.log(
+                "Test transport created in host: %s:%s",
+                testOptions.host,
+                testOptions.host,
+            );
         } else {
-            console.log("Transport created in host: %s:%s", mailOptions.host, mailOptions.port);
+            console.log(
+                "Transport created in host: %s:%s",
+                mailOptions.host,
+                mailOptions.port,
+            );
         }
     }
 
@@ -75,12 +84,14 @@ class MailService implements IMailService {
         try {
             const sender = userEmail;
 
-            console.log("Sending mail from host: %s", this.configService.getOrThrow(
-                ENV_VARIABLE_NAMES.MAIL_HOST,
-            ));
-            console.log("Sending mail from user: %s", this.configService.getOrThrow(
-                ENV_VARIABLE_NAMES.MAIL_USERNAME,
-            ));
+            console.log(
+                "Sending mail from host: %s",
+                this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_HOST),
+            );
+            console.log(
+                "Sending mail from user: %s",
+                this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_USERNAME),
+            );
             console.log("Sending mail as %s", sender);
 
             const info = await this.transporter.sendMail({

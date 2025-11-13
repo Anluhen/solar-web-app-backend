@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
-import ENV_VARIABLE_NAMES from "src/utils/env_variable_names";
+import ENV_VARIABLE_NAMES from "../../../utils/env_variable_names";
 
 export enum StatusEnvio {
     RASCUNHO = "RASCUNHO",
@@ -94,7 +94,8 @@ export class StatusRulesService {
 
     constructor(private readonly configService: ConfigService) {
         this.isProd =
-            this.configService.getOrThrow(ENV_VARIABLE_NAMES.NODE_ENV) === "production";
+            this.configService.getOrThrow(ENV_VARIABLE_NAMES.NODE_ENV) ===
+            "production";
 
         this.statusRules = {
             ...STATUS_RULES,

@@ -1,10 +1,12 @@
-import type { MigrationInterface, QueryRunner } from 'typeorm';
+import type { MigrationInterface, QueryRunner } from "typeorm";
 
 export class AllowSeparacaoStatus20251002120000 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query('ALTER TABLE "envios" DROP CONSTRAINT IF EXISTS "envios_status_check"');
+    public async up(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(
+            'ALTER TABLE "envios" DROP CONSTRAINT IF EXISTS "envios_status_check"',
+        );
 
-    await queryRunner.query(`DO $$
+        await queryRunner.query(`DO $$
       DECLARE constraint_record record;
       BEGIN
         FOR constraint_record IN
@@ -20,22 +22,22 @@ export class AllowSeparacaoStatus20251002120000 implements MigrationInterface {
       $$;
     `);
 
-    await queryRunner.query(`
+        await queryRunner.query(`
       ALTER TABLE "envios"
       ADD CONSTRAINT "envios_status_check"
       CHECK ("status" IN ('RASCUNHO','SEPARACAO','ENVIADO','CANCELADO'));
     `);
-  }
+    }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`
+    public async down(queryRunner: QueryRunner): Promise<void> {
+        await queryRunner.query(`
       ALTER TABLE "envios" DROP CONSTRAINT IF EXISTS "envios_status_check";
     `);
 
-    await queryRunner.query(`
+        await queryRunner.query(`
       ALTER TABLE "envios"
       ADD CONSTRAINT "envios_status_check"
       CHECK ("status" IN ('RASCUNHO','ENVIADO','CANCELADO'));
     `);
-  }
+    }
 }

@@ -6,4 +6,4 @@ import itemsServiceProvider from "./services/items.service";
     controllers: [ItemsController],
     providers: [itemsServiceProvider],
 })
-export default class ItemsModule { }
+export default class ItemsModule {}
