@@ -14,8 +14,8 @@ run:migrations:
   script:
     - npm ci
     - npm run build
-    - npm run migration:run
-    # - npm run typeorm -- migration:run --fake
+    - NODE_ENV=production npx ts-node scripts/reset-migrations.ts || true
+    - NODE_ENV=production npm run migration:run
   environment: qas
 
 deploy:qa:

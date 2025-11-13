@@ -1,6 +1,23 @@
 import { DataSource } from 'typeorm';
 import { config } from 'dotenv';
-config({ path: 'config/.env' });
+import * as path from 'path';
+
+// Only load from config/.env in development if the file exists
+const envPath = path.join(__dirname, 'config', '.env');
+try {
+  config({ path: envPath });
+} catch (error) {
+  // Silently fail in production where .env file doesn't exist
+}
+
+// Determine if we're running from dist (production) or src (development)
+const isProduction = process.env.NODE_ENV === 'production' || !process.env.NODE_ENV;
+const migrationsPath = isProduction
+  ? 'dist/migrations/*.js'
+  : 'src/migrations/*.ts';
+const entitiesPath = isProduction
+  ? 'dist/modules/**/entities/*.entity.js'
+  : 'src/modules/**/entities/*.entity.{ts,js}';
 
 export default new DataSource({
   type: 'postgres',
@@ -9,6 +26,6 @@ export default new DataSource({
   username: process.env.POSTGRES_USERNAME,
   password: process.env.POSTGRES_PASSWORD,
   database: process.env.POSTGRES_DATABASE,
-  entities: ['src/modules/**/entities/*.entity.{ts,js}'],
-  migrations: ['src/migrations/*.ts'],
+  entities: [entitiesPath],
+  migrations: [migrationsPath],
 });
