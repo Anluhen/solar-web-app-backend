@@ -8,6 +8,7 @@ import ENV_VARIABLE_NAMES from "src/utils/env_variable_names";
 class MailService implements IMailService {
     private readonly transporter: Transporter;
     private readonly usesTestAccount: boolean;
+    private readonly isProd: boolean;
 
     constructor(private readonly configService: ConfigService) {
         const configuredHost = this.configService.get<string>(
@@ -26,6 +27,10 @@ class MailService implements IMailService {
         const isDev =
             this.configService.getOrThrow(ENV_VARIABLE_NAMES.NODE_ENV) ===
             "development";
+
+        this.isProd =
+            this.configService.getOrThrow(ENV_VARIABLE_NAMES.NODE_ENV) ===
+            "production";
 
         const mailOptions = {
             host: configuredHost,
@@ -83,19 +88,21 @@ class MailService implements IMailService {
     ): Promise<void> {
         try {
             const sender = userEmail;
+            const mailFrom = this.configService.getOrThrow(
+                ENV_VARIABLE_NAMES.MAIL_USERNAME,
+            );
+            const toArray = Array.isArray(to) ? to : [to];
 
             console.log(
                 "Sending mail from host: %s",
                 this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_HOST),
             );
-            console.log(
-                "Sending mail from user: %s",
-                this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_USERNAME),
-            );
+            console.log("Sending mail from user: %s", mailFrom);
             console.log("Sending mail as %s", sender);
+            console.log("Sending mail to %s", toArray.join(", "));
 
             const info = await this.transporter.sendMail({
-                from: ENV_VARIABLE_NAMES.MAIL_USERNAME,
+                from: mailFrom,
                 cc: sender,
                 to,
                 subject,

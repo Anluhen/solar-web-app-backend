@@ -6,6 +6,7 @@ import {
     InternalServerErrorException,
     NotFoundException,
 } from "@nestjs/common";
+import { ConfigService } from "@nestjs/config";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import EnvioEntity from "../entities/envio.entity";
@@ -15,16 +16,24 @@ import { StatusEnvio, StatusRulesService } from "../rules/status.rules";
 import { IMateriaisService } from "../../materiais/interfaces/materiais.service.interface";
 import MaterialEntity from "../../materiais/entities/material.entity";
 import { IMailService } from "../../mail/interfaces/mail.service.interface";
+import ENV_VARIABLE_NAMES from "../../../utils/env_variable_names";
 
 @Injectable()
 class EnviosService implements IEnviosService {
+    private readonly isProd: boolean;
+
     constructor(
         @InjectRepository(EnvioEntity, "postgreConnection")
         private readonly repo: Repository<EnvioEntity>,
         private readonly materiaisService: IMateriaisService,
         private readonly statusRulesService: StatusRulesService,
         @Inject(IMailService) private readonly mailService: IMailService,
-    ) {}
+        private readonly configService: ConfigService,
+    ) {
+        this.isProd =
+            this.configService.getOrThrow(ENV_VARIABLE_NAMES.NODE_ENV) ===
+            "production";
+    }
 
     async postEnvio(dto: EnvioFormDto): Promise<EnvioEntity> {
         const payload = { ...dto, ufv: dto.ufv ?? "SEM NOME" };
@@ -132,6 +141,19 @@ class EnviosService implements IEnviosService {
                 materiais,
             );
 
+            // In non-production environments, require frontend confirmation
+            if (!(dto as any).confirmed) {
+                throw new BadRequestException({
+                    message: "EMAIL_CONFIRMATION_REQUIRED",
+                    emailData: {
+                        from: "mailer@example.com",
+                        cc: userEmail,
+                        to: Array.isArray(to) ? to : [to],
+                        subject,
+                    },
+                });
+            }
+
             await this.notifyStatusChange(to, subject, htmlBody, userEmail);
         }
 
@@ -179,6 +201,21 @@ class EnviosService implements IEnviosService {
                 payload.status,
                 materiais,
             );
+
+            // In non-production environments, require frontend confirmation
+            if (!this.isProd && !(dto as any).confirmed) {
+                throw new BadRequestException({
+                    message: "EMAIL_CONFIRMATION_REQUIRED",
+                    emailData: {
+                        from: this.configService.getOrThrow(
+                            ENV_VARIABLE_NAMES.MAIL_USERNAME,
+                        ),
+                        cc: userEmail,
+                        to: Array.isArray(to) ? to : [to],
+                        subject,
+                    },
+                });
+            }
 
             await this.notifyStatusChange(to, subject, htmlBody, userEmail);
         }
@@ -228,16 +265,16 @@ class EnviosService implements IEnviosService {
         const materiaisRows =
             materiais.length > 0
                 ? materiais
-                      .map(
-                          (material) => `
+                    .map(
+                        (material) => `
                       <tr>
                           <td style="${cellStyle}">${this.escapeHtml(this.formatCell(material.sap))}</td>
                           <td style="${cellStyle}">${this.escapeHtml(this.formatCell(material.descricao))}</td>
                           <td style="${cellStyle}">${this.escapeHtml(this.formatCell(material.quantidade))}</td>
                       </tr>
                   `,
-                      )
-                      .join("")
+                    )
+                    .join("")
                 : `<tr><td style="${cellStyle}" colspan="3">Nenhum material cadastrado.</td></tr>`;
 
         return `
