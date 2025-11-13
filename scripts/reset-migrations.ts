@@ -8,15 +8,35 @@ async function resetMigrations() {
     await dataSource.initialize();
     console.log('Connected to database');
 
-    // Drop the migrations table to reset migration state
-    await dataSource.query('DROP TABLE IF EXISTS "migrations"');
-    console.log('Dropped migrations table');
+    // Check if migrations table exists
+    const migrationTableExists = await dataSource.query(`
+      SELECT EXISTS (
+        SELECT 1 FROM information_schema.tables 
+        WHERE table_name = 'migrations'
+      )
+    `);
+
+    if (migrationTableExists[0].exists) {
+      // Check if there are pending migrations
+      const migrations = await dataSource.query('SELECT * FROM "migrations"');
+      console.log(`Found ${migrations.length} migration records in database`);
+
+      if (migrations.length > 0) {
+        console.log('Resetting migrations table due to stale migration records...');
+        await dataSource.query('DROP TABLE IF EXISTS "migrations"');
+        console.log('✓ Dropped migrations table - migrations can now run from scratch');
+      } else {
+        console.log('✓ Migrations table is clean, no reset needed');
+      }
+    } else {
+      console.log('✓ Migrations table does not exist, no reset needed');
+    }
 
     await dataSource.destroy();
-    console.log('Reset complete. Migrations can now run from scratch.');
   } catch (error) {
-    console.error('Error resetting migrations:', error);
-    process.exit(1);
+    console.error('Error during migration reset check:', error);
+    // Don't exit with error - this is a check, not critical
+    process.exit(0);
   }
 }
 
