@@ -24,4 +24,6 @@ deploy:qa:
   environment: qas
 
 deploy:prd:
+  needs:
+    - run:migrations
   environment: prd
