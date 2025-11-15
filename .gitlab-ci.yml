@@ -14,16 +14,23 @@ run:migrations:
   script:
     - npm ci
     - npm run build
-    - NODE_ENV=production npx ts-node scripts/reset-migrations.ts || true
+    - npm run migration:verify
+    - NODE_ENV=production npm run typeorm -- migration:run --fake
     - NODE_ENV=production npm run migration:run
   environment: qas
+  rules:
+    - when: on_success
 
 deploy:qa:
   needs:
     - run:migrations
   environment: qas
+  rules:
+    - when: on_success
 
 deploy:prd:
   needs:
     - run:migrations
   environment: prd
+  rules:
+    - when: on_success

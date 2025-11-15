@@ -11,25 +11,36 @@ async function resetMigrations() {
     // Check if migrations table exists
     const migrationTableExists = await dataSource.query(`
       SELECT EXISTS (
-        SELECT 1 FROM information_schema.tables 
+        SELECT 1 FROM information_schema.tables
         WHERE table_name = 'migrations'
       )
     `);
 
     if (migrationTableExists[0].exists) {
-      // Check if there are pending migrations
+      // Check current migration records
       const migrations = await dataSource.query('SELECT * FROM "migrations"');
       console.log(`Found ${migrations.length} migration records in database`);
-
       if (migrations.length > 0) {
-        console.log('Resetting migrations table due to stale migration records...');
-        await dataSource.query('DROP TABLE IF EXISTS "migrations"');
-        console.log('✓ Dropped migrations table - migrations can now run from scratch');
-      } else {
-        console.log('✓ Migrations table is clean, no reset needed');
+        console.log('Migration records:', migrations.map((m: any) => m.name || m.id).join(', '));
       }
+
+      console.log('Dropping migrations table to ensure clean slate for migration discovery...');
+      await dataSource.query('DROP TABLE IF EXISTS "migrations"');
+      console.log('✓ Dropped migrations table');
     } else {
-      console.log('✓ Migrations table does not exist, no reset needed');
+      console.log('✓ Migrations table does not exist');
+    }
+
+    // Log discovered migrations for visibility
+    const discoveredMigrations = dataSource.migrations;
+    if (discoveredMigrations && discoveredMigrations.length > 0) {
+      console.log(`\nDiscovered ${discoveredMigrations.length} migration(s):`);
+      discoveredMigrations.forEach((m: any) => {
+        const migrationName = m.name || m.constructor.name || 'Unknown';
+        console.log(`  - ${migrationName}`);
+      });
+    } else {
+      console.log('\n⚠ WARNING: No migrations discovered in migration path!');
     }
 
     await dataSource.destroy();
