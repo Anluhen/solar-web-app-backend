@@ -13,11 +13,11 @@ try {
 // Determine if we're running from dist (production) or src (development)
 const isProduction = process.env.NODE_ENV === 'production' || !process.env.NODE_ENV;
 const migrationsPath = isProduction
-  ? 'dist/migrations/*.js'
-  : 'src/migrations/*.ts';
+  ? path.resolve(__dirname, 'dist/migrations/*.js')
+  : path.resolve(__dirname, 'src/migrations/*.ts');
 const entitiesPath = isProduction
-  ? 'dist/modules/**/entities/*.entity.js'
-  : 'src/modules/**/entities/*.entity.{ts,js}';
+  ? path.resolve(__dirname, 'dist/modules/**/entities/*.entity.js')
+  : path.resolve(__dirname, 'src/modules/**/entities/*.entity.{ts,js}');
 
 export default new DataSource({
   type: 'postgres',

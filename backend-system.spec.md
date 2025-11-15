@@ -10,9 +10,16 @@ The backend is a NestJS 10 application that exposes RESTful endpoints for managi
 - Each domain module declares controllers, DTOs, services, and entities. Abstract service interfaces provide injection tokens so implementations can be swapped.
 
 ## Database Migrations
-- `20240101000000-initial-schema` creates the base tables (envios, materiais, staff). Register it first; on existing databases run `typeorm migration:run --fake` so later migrations can apply without recreating tables.
+- `20240101000000-initial-schema` creates the base tables (envios, materiais, staff).
 - `20250925164631-add-ufv-to-envios` adds the `ufv` column plus index.
 - `20251002120000-allow-separacao-status` rebuilds the status CHECK constraint to include `SEPARACAO`.
+
+**Migration Strategy**
+The CI/CD pipeline (`.gitlab-ci.yml`) executes migrations in two phases to handle both fresh and existing databases:
+1. `npm run typeorm -- migration:run --fake-only` marks all discovered migrations as completed in the TypeORM metadata table without executing them. On fresh databases, this is a no-op; on databases with existing schema (copied from another environment), this prevents re-creation attempts.
+2. `npm run migration:run` executes any pending migrations (those not yet marked complete).
+
+This two-phase approach safely handles both fresh deployments and cloned databases without manual intervention.
 
 ## API Endpoints
 ### Envios (`/envios`)
