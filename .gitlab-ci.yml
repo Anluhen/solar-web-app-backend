@@ -13,17 +13,24 @@ run:migrations:qa:
   image: node:$NODE_VERSION
   script:
     - npm ci --include=dev
-    - npm run build
 
-    # Generate migrations if schema changes exist (non-blocking)
+    # Generate migrations BEFORE build (so they get compiled)
     - |
+      echo "Checking for schema changes..."
       if npm run migration:generate 2>&1 | grep -q "No changes in database schema"; then
         echo "✓ No schema changes detected - skipping migration generation"
       else
         echo "✓ Migration generated successfully"
       fi
 
+    # Build compiles newly generated migrations
+    - npm run build
+
+    # Verify migrations are compiled
     - npm run migration:verify
+
+    # Run migrations
+    - NODE_ENV=production npm run typeorm -- migration:run --fake
     - NODE_ENV=production npm run migration:run
   environment: qas
   rules:
@@ -37,17 +44,24 @@ run:migrations:prd:
     NODE_ENV: production
   script:
     - npm ci --include=dev
-    - npm run build
 
-    # Generate migrations if schema changes exist (non-blocking)
+    # Generate migrations BEFORE build (so they get compiled)
     - |
+      echo "Checking for schema changes..."
       if npm run migration:generate 2>&1 | grep -q "No changes in database schema"; then
         echo "✓ No schema changes detected - skipping migration generation"
       else
         echo "✓ Migration generated successfully"
       fi
 
+    # Build compiles newly generated migrations
+    - npm run build
+
+    # Verify migrations are compiled
     - npm run migration:verify
+
+    # Run migrations
+    - npm run typeorm -- migration:run --fake
     - npm run migration:run
   environment: prd
   rules:
