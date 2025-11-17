@@ -22,7 +22,7 @@
         "test:e2e": "jest --config ./test/jest-e2e.json",
         "typeorm": "typeorm-ts-node-commonjs -d typeorm.config.ts",
         "migration:run": "npm run typeorm -- migration:run",
-        "migration:generate": "npm run typeorm -- migration:generate src/migrations/$npm_config_name",
+        "migration:generate": "npm run typeorm -- migration:generate src/migrations/migration",
         "migration:verify": "node scripts/verify-migrations.js"
     },
     "dependencies": {
