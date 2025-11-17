@@ -24,7 +24,6 @@ run:migrations:qa:
       fi
 
     - npm run migration:verify
-    - NODE_ENV=production npm run typeorm -- migration:run --fake
     - NODE_ENV=production npm run migration:run
   environment: qas
   rules:
@@ -49,7 +48,6 @@ run:migrations:prd:
       fi
 
     - npm run migration:verify
-    - npm run typeorm -- migration:run --fake
     - npm run migration:run
   environment: prd
   rules:
