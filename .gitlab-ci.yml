@@ -14,9 +14,9 @@ run:migrations:qa:
   script:
     - npm ci --include=dev
     - npm run build
+    - npm run migration:generate
     - npm run migration:verify
-    - NODE_ENV=production npm run typeorm -- migration:run --fake
-    - NODE_ENV=production npm run migration:run
+    - npm run migration:run
   environment: qas
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
@@ -28,9 +28,9 @@ run:migrations:prd:
   script:
     - npm ci --include=dev
     - npm run build
+    - npm run migration:generate
     - npm run migration:verify
-    - NODE_ENV=production npm run typeorm -- migration:run --fake
-    - NODE_ENV=production npm run migration:run
+    - npm run migration:run
   environment: prd
   rules:
     - if: '$CI_COMMIT_TAG'
