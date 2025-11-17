@@ -25,6 +25,8 @@ run:migrations:qa:
 run:migrations:prd:
   stage: deploy
   image: node:$NODE_VERSION
+  variables:
+    NODE_ENV: production
   script:
     - npm ci --include=dev
     - npm run build
