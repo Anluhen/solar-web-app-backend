@@ -8,7 +8,7 @@ variables:
   NODE_VERSION: "20"
   K8S_APP_PORT: "3001"
 
-run:migrations:
+run:migrations:qa:
   stage: deploy
   image: node:$NODE_VERSION
   script:
@@ -19,18 +19,35 @@ run:migrations:
     - NODE_ENV=production npm run migration:run
   environment: qas
   rules:
-    - when: on_success
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: on_success
+
+run:migrations:prd:
+  stage: deploy
+  image: node:$NODE_VERSION
+  script:
+    - npm ci
+    - npm run build
+    - npm run migration:verify
+    - NODE_ENV=production npm run typeorm -- migration:run --fake
+    - NODE_ENV=production npm run migration:run
+  environment: prd
+  rules:
+    - if: '$CI_COMMIT_TAG'
+      when: on_success
 
 deploy:qa:
   needs:
-    - run:migrations
+    - run:migrations:qa
   environment: qas
   rules:
-    - when: on_success
+    - if: '$CI_COMMIT_BRANCH == "master"'
+      when: on_success
 
 deploy:prd:
   needs:
-    - run:migrations
+    - run:migrations:prd
   environment: prd
   rules:
-    - when: on_success
+    - if: '$CI_COMMIT_TAG'
+      when: on_success
