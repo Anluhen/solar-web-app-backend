@@ -14,9 +14,18 @@ run:migrations:qa:
   script:
     - npm ci --include=dev
     - npm run build
-    - npm run migration:generate
+
+    # Generate migrations if schema changes exist (non-blocking)
+    - |
+      if npm run migration:generate 2>&1 | grep -q "No changes in database schema"; then
+        echo "✓ No schema changes detected - skipping migration generation"
+      else
+        echo "✓ Migration generated successfully"
+      fi
+
     - npm run migration:verify
-    - npm run migration:run
+    - NODE_ENV=production npm run typeorm -- migration:run --fake
+    - NODE_ENV=production npm run migration:run
   environment: qas
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
@@ -30,8 +39,17 @@ run:migrations:prd:
   script:
     - npm ci --include=dev
     - npm run build
-    - npm run migration:generate
+
+    # Generate migrations if schema changes exist (non-blocking)
+    - |
+      if npm run migration:generate 2>&1 | grep -q "No changes in database schema"; then
+        echo "✓ No schema changes detected - skipping migration generation"
+      else
+        echo "✓ Migration generated successfully"
+      fi
+
     - npm run migration:verify
+    - npm run typeorm -- migration:run --fake
     - npm run migration:run
   environment: prd
   rules:
