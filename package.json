@@ -7,8 +7,9 @@
     "license": "UNLICENSED",
     "scripts": {
         "dev": "npm --prefix ../frontend run dev",
-        "build": "nest build && npm run build:migrations",
-        "build:migrations": "mkdir -p dist/migrations && cp dist/src/migrations/*.js dist/migrations/ || true",
+        "clean:dist": "rm -rf dist/src dist/*.tsbuildinfo",
+        "build": "npm run clean:dist && nest build && npm run build:migrations",
+        "build:migrations": "mkdir -p dist/migrations && cp dist/src/migrations/*.js dist/migrations/ 2>/dev/null || echo 'No migrations to copy'",
         "format": "prettier --write \"src/**/*.ts\" \"test/**/*.ts\"",
         "start": "nest start",
         "start:dev": "nest start --watch",
