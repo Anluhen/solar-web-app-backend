@@ -30,7 +30,7 @@ run:migrations:qa:
     - npm run migration:verify
 
     # Run migrations
-    - NODE_ENV=production npm run migration:run
+    - NODE_ENV=quality npm run migration:run
   environment: qas
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
