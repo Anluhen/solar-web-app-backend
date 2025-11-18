@@ -48,7 +48,7 @@ clear:migrations:prd:
     - |
       echo "⚠️  CLEARING PRODUCTION MIGRATION TABLE"
       echo "This removes fake migrations that were marked complete but never executed"
-      npm run typeorm -- query "TRUNCATE TABLE typeorm_migrations;"
+      npm run typeorm -- query "TRUNCATE TABLE migrations;"
       echo "✓ Migration table cleared. Run run:migrations:prd next to properly create all tables"
   environment: prd
   rules:
