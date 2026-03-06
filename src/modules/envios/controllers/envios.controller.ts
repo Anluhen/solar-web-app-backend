@@ -48,6 +48,38 @@ export class EnviosController {
         });
     }
 
+    // Static bulk route must come BEFORE dynamic :id routes
+    @Put("bulk/nextstatus")
+    @ApiOkResponse({
+        schema: {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    id: { type: "string" },
+                    status: { type: "string" },
+                    error: { type: "string", nullable: true },
+                },
+            },
+        },
+    })
+    bulkAdvanceStatus(
+        @Body()
+        body: {
+            ids: string[];
+            separacao?: string;
+            data_enviado?: string;
+            data_entregue?: string;
+        },
+        @Headers("x-user-email") userEmail: string,
+    ): Promise<{ id: string; status: string; error?: string }[]> {
+        return this.enviosService.bulkAdvanceStatus(body.ids ?? [], userEmail ?? "", {
+            separacao: body.separacao,
+            data_enviado: body.data_enviado,
+            data_entregue: body.data_entregue,
+        });
+    }
+
     @Put(":id")
     @ApiOkResponse({ type: EnvioEntity })
     async putEnvio(

@@ -1,5 +1,5 @@
 import { ApiProperty } from "@nestjs/swagger";
-import { IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
+import { IsBoolean, IsEnum, IsNotEmpty, IsOptional, IsString } from "class-validator";
 import { StatusEnvio } from "../rules/status.rules";
 
 export default class EnvioFormDto {
@@ -39,4 +39,21 @@ export default class EnvioFormDto {
     @IsOptional()
     @IsString()
     separacao?: string;
+
+    @IsOptional()
+    @IsString()
+    data_enviado?: string | null;
+
+    @IsOptional()
+    @IsString()
+    data_entregue?: string | null;
+
+    @IsOptional()
+    @IsString()
+    previsao_chegada?: string | null;
+
+    /** When true, skip email notification on status transition (for backfilling historical records) */
+    @IsOptional()
+    @IsBoolean()
+    skip_email?: boolean;
 }

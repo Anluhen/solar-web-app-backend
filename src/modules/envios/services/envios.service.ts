@@ -121,13 +121,17 @@ class EnviosService implements IEnviosService {
         const payload: EnvioFormDto = {
             ...current,
             status: rule.next,
+            // Forward status-specific dates supplied by the caller
+            ...(dto.data_enviado !== undefined && { data_enviado: dto.data_enviado }),
+            ...(dto.data_entregue !== undefined && { data_entregue: dto.data_entregue }),
         };
 
         const materiais = await this.materiaisService.getMateriaisByEnvio(id);
 
         if (
             payload.status !== current.status &&
-            payload.status === StatusEnvio.SEPARACAO
+            payload.status === StatusEnvio.SEPARACAO &&
+            !dto.skip_email
         ) {
             const to = this.statusRulesService.getStatus(
                 payload.status,
@@ -220,6 +224,38 @@ class EnviosService implements IEnviosService {
         }
 
         return this.putEnvio(id, payload);
+    }
+
+    async bulkAdvanceStatus(
+        ids: string[],
+        userEmail: string,
+        dates?: { separacao?: string; data_enviado?: string; data_entregue?: string },
+    ): Promise<{ id: string; status: string; error?: string }[]> {
+        const results: { id: string; status: string; error?: string }[] = [];
+
+        for (const id of ids) {
+            try {
+                // Pass confirmed:true to skip email confirmation dialog for batch ops
+                // Also forward any date fields relevant to this transition
+                const updated = await this.advanceStatus(
+                    id,
+                    {
+                        confirmed: true,
+                        ...(dates?.separacao && { separacao: dates.separacao }),
+                        ...(dates?.data_enviado && { data_enviado: dates.data_enviado }),
+                        ...(dates?.data_entregue && { data_entregue: dates.data_entregue }),
+                    } as any,
+                    userEmail,
+                );
+                results.push({ id, status: updated.status });
+            } catch (err) {
+                const message = err instanceof Error ? err.message : String(err);
+                const envio = await this.getEnvio(id).catch(() => null);
+                results.push({ id, status: envio?.status ?? "UNKNOWN", error: message });
+            }
+        }
+
+        return results;
     }
 
     async deleteEnvio(id: string): Promise<EnvioEntity> {
