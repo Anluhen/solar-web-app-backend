@@ -13,7 +13,7 @@ import { ApiProperty } from "@nestjs/swagger";
 import { StatusEnvio } from "../rules/status.rules";
 
 @Entity("envios")
-@Check(`"status" IN ('RASCUNHO','SEPARACAO','ENVIADO','ENTREGUE','CANCELADO')`)
+@Check("CHK_envio_status", `"status" IN ('RASCUNHO','SEPARACAO','ENVIADO','ENTREGUE','CANCELADO')`)
 @Index("envios_gerador_idx", ["gerador"])
 @Index("envios_pep_idx", ["pep"])
 @Index("envios_zvgp_idx", ["zvgp"])
