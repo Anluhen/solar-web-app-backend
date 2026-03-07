@@ -16,23 +16,27 @@ run:migrations:qa:
   script:
     - npm ci --include=dev
 
-    # Generate migrations BEFORE build (so they get compiled)
-    - |
-      echo "Checking for schema changes..."
-      if npm run migration:generate 2>&1 | grep -q "No changes in database schema"; then
-        echo "✓ No schema changes detected - skipping migration generation"
-      else
-        echo "✓ Migration generated successfully"
-      fi
-
-    # Build compiles newly generated migrations
+    # Build compiles committed migrations
     - npm run build
 
     # Verify migrations are compiled
     - npm run migration:verify
 
-    # Run migrations
+    # Run committed migrations first to bring DB up to date
     - npm run migration:run
+
+    # Generate against the updated DB — expected to produce no diff
+    # If a real diff exists, compile and run the new migration
+    - |
+      echo "Checking for remaining schema changes..."
+      GENERATE_OUTPUT=$(npm run migration:generate 2>&1)
+      if echo "$GENERATE_OUTPUT" | grep -q "No changes in database schema"; then
+        echo "✓ No schema changes detected"
+      else
+        echo "✓ New migration generated — compiling and running..."
+        npm run build
+        npm run migration:run
+      fi
   environment: qas
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
@@ -63,23 +67,27 @@ run:migrations:prd:
   script:
     - npm ci --include=dev
 
-    # Generate migrations BEFORE build (so they get compiled)
-    - |
-      echo "Checking for schema changes..."
-      if npm run migration:generate 2>&1 | grep -q "No changes in database schema"; then
-        echo "✓ No schema changes detected - skipping migration generation"
-      else
-        echo "✓ Migration generated successfully"
-      fi
-
-    # Build compiles newly generated migrations
+    # Build compiles committed migrations
     - npm run build
 
     # Verify migrations are compiled
     - npm run migration:verify
 
-    # Run migrations
+    # Run committed migrations first to bring DB up to date
     - npm run migration:run
+
+    # Generate against the updated DB — expected to produce no diff
+    # If a real diff exists, compile and run the new migration
+    - |
+      echo "Checking for remaining schema changes..."
+      GENERATE_OUTPUT=$(npm run migration:generate 2>&1)
+      if echo "$GENERATE_OUTPUT" | grep -q "No changes in database schema"; then
+        echo "✓ No schema changes detected"
+      else
+        echo "✓ New migration generated — compiling and running..."
+        npm run build
+        npm run migration:run
+      fi
   environment: prd
   rules:
     - if: '$CI_COMMIT_TAG'
