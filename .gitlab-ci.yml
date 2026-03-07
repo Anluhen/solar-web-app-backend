@@ -29,7 +29,7 @@ run:migrations:qa:
     # If a real diff exists, compile and run the new migration
     - |
       echo "Checking for remaining schema changes..."
-      GENERATE_OUTPUT=$(npm run migration:generate 2>&1)
+      GENERATE_OUTPUT=$(npm run migration:generate 2>&1 || true)
       if echo "$GENERATE_OUTPUT" | grep -q "No changes in database schema"; then
         echo "✓ No schema changes detected"
       else
@@ -80,7 +80,7 @@ run:migrations:prd:
     # If a real diff exists, compile and run the new migration
     - |
       echo "Checking for remaining schema changes..."
-      GENERATE_OUTPUT=$(npm run migration:generate 2>&1)
+      GENERATE_OUTPUT=$(npm run migration:generate 2>&1 || true)
       if echo "$GENERATE_OUTPUT" | grep -q "No changes in database schema"; then
         echo "✓ No schema changes detected"
       else
