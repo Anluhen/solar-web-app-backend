@@ -9,13 +9,7 @@ import {
     RelationId,
 } from "typeorm";
 import { ApiProperty } from "@nestjs/swagger";
-import {
-    IsDate,
-    IsInt,
-    IsNotEmpty,
-    IsOptional,
-    IsString,
-} from "class-validator";
+import { IsDate, IsInt, IsNotEmpty, IsString } from "class-validator";
 import Envio from "../../envios/entities/envio.entity";
 
 @Entity("materiais")

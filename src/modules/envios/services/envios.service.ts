@@ -30,7 +30,11 @@ class EnviosService implements IEnviosService {
         @Inject(IMailService) private readonly mailService: IMailService,
         private readonly configService: ConfigService,
     ) {
-        const nodeEnv = (this.configService.get(ENV_VARIABLE_NAMES.NODE_ENV) || "").trim().toLowerCase();
+        const nodeEnv = (
+            this.configService.get(ENV_VARIABLE_NAMES.NODE_ENV) || ""
+        )
+            .trim()
+            .toLowerCase();
         this.isProd = nodeEnv === "production";
     }
 
@@ -122,8 +126,12 @@ class EnviosService implements IEnviosService {
             ...current,
             status: rule.next,
             // Forward status-specific dates supplied by the caller
-            ...(dto.data_enviado !== undefined && { data_enviado: dto.data_enviado }),
-            ...(dto.data_entregue !== undefined && { data_entregue: dto.data_entregue }),
+            ...(dto.data_enviado !== undefined && {
+                data_enviado: dto.data_enviado,
+            }),
+            ...(dto.data_entregue !== undefined && {
+                data_entregue: dto.data_entregue,
+            }),
         };
 
         const materiais = await this.materiaisService.getMateriaisByEnvio(id);
@@ -229,7 +237,11 @@ class EnviosService implements IEnviosService {
     async bulkAdvanceStatus(
         ids: string[],
         userEmail: string,
-        dates?: { separacao?: string; data_enviado?: string; data_entregue?: string },
+        dates?: {
+            separacao?: string;
+            data_enviado?: string;
+            data_entregue?: string;
+        },
     ): Promise<{ id: string; status: string; error?: string }[]> {
         const results: { id: string; status: string; error?: string }[] = [];
 
@@ -242,16 +254,25 @@ class EnviosService implements IEnviosService {
                     {
                         confirmed: true,
                         ...(dates?.separacao && { separacao: dates.separacao }),
-                        ...(dates?.data_enviado && { data_enviado: dates.data_enviado }),
-                        ...(dates?.data_entregue && { data_entregue: dates.data_entregue }),
+                        ...(dates?.data_enviado && {
+                            data_enviado: dates.data_enviado,
+                        }),
+                        ...(dates?.data_entregue && {
+                            data_entregue: dates.data_entregue,
+                        }),
                     } as any,
                     userEmail,
                 );
                 results.push({ id, status: updated.status });
             } catch (err) {
-                const message = err instanceof Error ? err.message : String(err);
+                const message =
+                    err instanceof Error ? err.message : String(err);
                 const envio = await this.getEnvio(id).catch(() => null);
-                results.push({ id, status: envio?.status ?? "UNKNOWN", error: message });
+                results.push({
+                    id,
+                    status: envio?.status ?? "UNKNOWN",
+                    error: message,
+                });
             }
         }
 
@@ -300,16 +321,16 @@ class EnviosService implements IEnviosService {
         const materiaisRows =
             materiais.length > 0
                 ? materiais
-                    .map(
-                        (material) => `
+                      .map(
+                          (material) => `
                       <tr>
                           <td style="${cellStyle}">${this.escapeHtml(this.formatCell(material.sap))}</td>
                           <td style="${cellStyle}">${this.escapeHtml(this.formatCell(material.descricao))}</td>
                           <td style="${cellStyle}">${this.escapeHtml(this.formatCell(material.quantidade))}</td>
                       </tr>
                   `,
-                    )
-                    .join("")
+                      )
+                      .join("")
                 : `<tr><td style="${cellStyle}" colspan="3">Nenhum material cadastrado.</td></tr>`;
 
         return `

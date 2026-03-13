@@ -64,7 +64,13 @@ export const STATUS_RULES: Record<StatusEnvio, StatusRule> = {
         id: StatusEnvio.ENVIADO,
         name: "Enviado",
         required: ["data_entregue"],
-        editable: ["separacao", "data_enviado", "previsao_chegada", "data_entregue", "observacoes"],
+        editable: [
+            "separacao",
+            "data_enviado",
+            "previsao_chegada",
+            "data_entregue",
+            "observacoes",
+        ],
         next: StatusEnvio.ENTREGUE,
     },
     ENTREGUE: {
@@ -105,10 +111,16 @@ export class StatusRulesService {
     private readonly statusRules: Record<StatusEnvio, StatusRule>;
 
     constructor(private readonly configService: ConfigService) {
-        const nodeEnv = (this.configService.get(ENV_VARIABLE_NAMES.NODE_ENV) || "").trim().toLowerCase();
+        const nodeEnv = (
+            this.configService.get(ENV_VARIABLE_NAMES.NODE_ENV) || ""
+        )
+            .trim()
+            .toLowerCase();
         this.isProd = nodeEnv === "production";
 
-        console.log(`[StatusRulesService] NODE_ENV: "${nodeEnv}", isProd: ${this.isProd}`);
+        console.log(
+            `[StatusRulesService] NODE_ENV: "${nodeEnv}", isProd: ${this.isProd}`,
+        );
 
         this.statusRules = {
             ...STATUS_RULES,

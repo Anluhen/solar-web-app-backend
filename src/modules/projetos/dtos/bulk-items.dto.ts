@@ -6,7 +6,8 @@ import ProjetoItemFormDto from "./projeto-item-form.dto";
 export default class BulkItemsDto {
     @ApiProperty({
         type: () => [ProjetoItemFormDto],
-        description: "Lista de itens a substituir (substitui todos os existentes)",
+        description:
+            "Lista de itens a substituir (substitui todos os existentes)",
     })
     @IsArray()
     @ValidateNested({ each: true })
