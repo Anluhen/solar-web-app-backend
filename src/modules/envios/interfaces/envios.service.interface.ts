@@ -32,6 +32,10 @@ export abstract class IEnviosService {
     abstract bulkAdvanceStatus(
         ids: string[],
         userEmail: string,
-        dates?: { separacao?: string; data_enviado?: string; data_entregue?: string },
+        dates?: {
+            separacao?: string;
+            data_enviado?: string;
+            data_entregue?: string;
+        },
     ): Promise<{ id: string; status: string; error?: string }[]>;
 }

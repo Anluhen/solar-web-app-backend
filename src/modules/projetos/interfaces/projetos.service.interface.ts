@@ -39,14 +39,21 @@ export interface AggregateRow {
     is_virtual: boolean;
 }
 
+/** ProjetoPep with per-PEP delivery stats */
+export interface ProjetoPepWithStats extends ProjetoPep {
+    /** null when no items are registered for this PEP */
+    pct_entregue: number | null;
+}
+
 /** Projeto with computed delivery progress statistics */
-export interface ProjetoWithStats extends Projeto {
+export interface ProjetoWithStats extends Omit<Projeto, "peps"> {
     total_necessaria: number;
     total_separado: number;
     total_enviado: number;
     total_entregue: number;
     /** null when total_necessaria === 0 */
     pct_entregue: number | null;
+    peps?: ProjetoPepWithStats[];
 }
 
 @Injectable()
@@ -57,11 +64,15 @@ export abstract class IProjetosService {
         pep_prefix?: string;
         pm?: string;
         analista?: string;
+        secao?: string;
     }): Promise<ProjetoWithStats[]>;
     abstract getProjeto(id: string): Promise<Projeto>;
     abstract updateProjeto(id: string, dto: ProjetoFormDto): Promise<Projeto>;
 
-    abstract addPep(projetoId: string, dto: ProjetoPepFormDto): Promise<ProjetoPep>;
+    abstract addPep(
+        projetoId: string,
+        dto: ProjetoPepFormDto,
+    ): Promise<ProjetoPep>;
     abstract updatePep(
         projetoId: string,
         pepId: string,
@@ -89,9 +100,14 @@ export abstract class IProjetosService {
 
     /** Returns unique PEP suffixes (with zvgp/gerador/ufv) from existing Envios
      *  whose pep starts with the given prefix. */
-    abstract lookupPepSuffixes(
-        prefix: string,
-    ): Promise<Array<{ pep_suffix: string; zvgp: string; gerador: string; ufv: string }>>;
+    abstract lookupPepSuffixes(prefix: string): Promise<
+        Array<{
+            pep_suffix: string;
+            zvgp: string;
+            gerador: string;
+            ufv: string;
+        }>
+    >;
 
     /** Returns the enriched items (with delivery quantities) for a specific full PEP string.
      *  Looks up the matching ProjetoPep across all projects. */

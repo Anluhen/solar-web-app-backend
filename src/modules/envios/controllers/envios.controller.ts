@@ -73,11 +73,15 @@ export class EnviosController {
         },
         @Headers("x-user-email") userEmail: string,
     ): Promise<{ id: string; status: string; error?: string }[]> {
-        return this.enviosService.bulkAdvanceStatus(body.ids ?? [], userEmail ?? "", {
-            separacao: body.separacao,
-            data_enviado: body.data_enviado,
-            data_entregue: body.data_entregue,
-        });
+        return this.enviosService.bulkAdvanceStatus(
+            body.ids ?? [],
+            userEmail ?? "",
+            {
+                separacao: body.separacao,
+                data_enviado: body.data_enviado,
+                data_entregue: body.data_entregue,
+            },
+        );
     }
 
     @Put(":id")

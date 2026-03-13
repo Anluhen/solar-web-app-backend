@@ -7,7 +7,6 @@ import {
     ParseIntPipe,
     Post,
     Put,
-    UseGuards,
 } from "@nestjs/common";
 import StaffFormDto from "../dtos/staff-form.dto";
 import StaffEntity from "../entities/staff.entity";

@@ -1,6 +1,7 @@
 import {
     BadRequestException,
     ClassProvider,
+    ConflictException,
     Injectable,
     NotFoundException,
 } from "@nestjs/common";
@@ -42,7 +43,8 @@ class ProjetosService implements IProjetosService {
 
     private async findProjeto(id: string): Promise<Projeto> {
         const projeto = await this.projetoRepo.findOne({ where: { id } });
-        if (!projeto) throw new NotFoundException(`Projeto ${id} não encontrado`);
+        if (!projeto)
+            throw new NotFoundException(`Projeto ${id} não encontrado`);
         return projeto;
     }
 
@@ -92,12 +94,45 @@ class ProjetosService implements IProjetosService {
     // ─── CRUD Projeto ────────────────────────────────────────────────────────
 
     async createProjeto(dto: ProjetoFormDto): Promise<Projeto> {
+        const existing = await this.projetoRepo.findOne({
+            where: { pep_prefix: dto.pep_prefix },
+        });
+        if (existing) {
+            throw new ConflictException(
+                `Já existe um projeto com o PEP "${dto.pep_prefix}" (id: ${existing.id})`,
+            );
+        }
+
         const projeto = this.projetoRepo.create({
             nome: dto.nome,
             pep_prefix: dto.pep_prefix,
             pm: dto.pm,
-            analista: dto.analista,
+            analista: dto.analista ?? null,
             already_started: dto.already_started ?? false,
+            secao: dto.secao ?? null,
+            cliente: dto.cliente ?? null,
+            produto: dto.produto ?? null,
+            zvgp_projeto: dto.zvgp_projeto ?? null,
+            zrgp: dto.zrgp ?? null,
+            data_preparacao: dto.data_preparacao ?? null,
+            pep_faturavel: dto.pep_faturavel ?? null,
+            cns_ano: dto.cns_ano ?? null,
+            gerador_projeto: dto.gerador_projeto ?? null,
+            ordem_venda: dto.ordem_venda ?? null,
+            data_primeiro_envio: dto.data_primeiro_envio ?? null,
+            ordem_pedido_compra: dto.ordem_pedido_compra ?? null,
+            valor_total_liq: dto.valor_total_liq ?? null,
+            ml: dto.ml ?? null,
+            is_cpc: dto.is_cpc ?? null,
+            is_cpc47: dto.is_cpc47 ?? null,
+            claim: dto.claim ?? null,
+            data_claim: dto.data_claim ?? null,
+            observacoes_chefe: dto.observacoes_chefe ?? null,
+            data_criacao_pep: dto.data_criacao_pep ?? null,
+            idioma: dto.idioma ?? null,
+            empresa: dto.empresa ?? null,
+            contatos_cliente: dto.contatos_cliente ?? null,
+            contatos_weg: dto.contatos_weg ?? null,
         });
         const saved = await this.projetoRepo.save(projeto);
 
@@ -107,8 +142,12 @@ class ProjetosService implements IProjetosService {
                     projeto: saved,
                     nome: pepDto.nome ?? null,
                     pep_suffix: pepDto.pep_suffix,
-                    zvgp: pepDto.zvgp,
-                    gerador: pepDto.gerador,
+                    zvgp: pepDto.zvgp ?? null,
+                    zrgp: pepDto.zrgp ?? null,
+                    gerador: pepDto.gerador ?? null,
+                    data_preparacao: pepDto.data_preparacao ?? null,
+                    ml: pepDto.ml ?? null,
+                    is_cpc: pepDto.is_cpc ?? null,
                 });
                 await this.pepRepo.save(pep);
             }
@@ -125,6 +164,7 @@ class ProjetosService implements IProjetosService {
         pep_prefix?: string;
         pm?: string;
         analista?: string;
+        secao?: string;
     }): Promise<ProjetoWithStats[]> {
         const qb = this.projetoRepo
             .createQueryBuilder("p")
@@ -132,7 +172,9 @@ class ProjetosService implements IProjetosService {
             .orderBy("p.created_at", "DESC");
 
         if (filters?.nome && filters.nome.trim()) {
-            qb.andWhere("p.nome ILIKE :nome", { nome: `%${filters.nome.trim()}%` });
+            qb.andWhere("p.nome ILIKE :nome", {
+                nome: `%${filters.nome.trim()}%`,
+            });
         }
         if (filters?.pep_prefix && filters.pep_prefix.trim()) {
             qb.andWhere("p.pep_prefix ILIKE :pep_prefix", {
@@ -147,91 +189,145 @@ class ProjetosService implements IProjetosService {
                 analista: `%${filters.analista.trim()}%`,
             });
         }
+        if (filters?.secao && filters.secao.trim()) {
+            qb.andWhere("p.secao = :secao", { secao: filters.secao.trim() });
+        }
 
         const projetos = await qb.getMany();
         if (projetos.length === 0) return [];
 
-        // Compute stats per project
-        const statsResults = await Promise.all(
-            projetos.map(async (projeto) => {
-                // Total necessaria from ProjetoItems
-                const necResult = await this.itemRepo
-                    .createQueryBuilder("i")
-                    .innerJoin("i.projeto_pep", "pep")
-                    .innerJoin("pep.projeto", "proj")
-                    .where("proj.id = :id", { id: projeto.id })
-                    .select("COALESCE(SUM(i.quantidade_necessaria), 0)", "total")
-                    .getRawOne<{ total: string }>();
-                const total_necessaria = Number(necResult?.total ?? 0);
+        // Build a flat map: fullPep -> pepId for all peps across all projects
+        const allFullPeps: string[] = [];
+        const pepFullToId = new Map<string, string>();
+        for (const projeto of projetos) {
+            for (const pep of projeto.peps ?? []) {
+                const full = projeto.pep_prefix + pep.pep_suffix;
+                allFullPeps.push(full);
+                pepFullToId.set(full, pep.id);
+            }
+        }
 
-                const peps = projeto.peps ?? [];
-                if (peps.length === 0) {
-                    return {
-                        id: projeto.id,
-                        total_necessaria,
-                        total_separado: 0,
-                        total_enviado: 0,
-                        total_entregue: 0,
-                    };
-                }
+        // Batch query: delivery quantities grouped by pep string and status
+        const pepDeliveryRows =
+            allFullPeps.length > 0
+                ? await this.envioRepo
+                      .createQueryBuilder("e")
+                      .innerJoin("e.materiais", "m")
+                      .select("e.pep", "pep")
+                      .addSelect("e.status", "status")
+                      .addSelect("COALESCE(SUM(m.quantidade), 0)", "total")
+                      .where("e.pep IN (:...peps)", { peps: allFullPeps })
+                      .andWhere("e.status != :cancelled", {
+                          cancelled: "CANCELADO",
+                      })
+                      .groupBy("e.pep")
+                      .addGroupBy("e.status")
+                      .getRawMany<{
+                          pep: string;
+                          status: string;
+                          total: string;
+                      }>()
+                : [];
 
-                const fullPeps = peps.map((pep) => projeto.pep_prefix + pep.pep_suffix);
+        // pepId -> { status -> qty }
+        const pepDeliveryMap = new Map<string, Record<string, number>>();
+        for (const row of pepDeliveryRows) {
+            const pepId = pepFullToId.get(row.pep);
+            if (!pepId) continue;
+            if (!pepDeliveryMap.has(pepId)) pepDeliveryMap.set(pepId, {});
+            pepDeliveryMap.get(pepId)![row.status] = Number(row.total);
+        }
 
-                // Delivery quantities by status
-                const deliveryRows = await this.envioRepo
-                    .createQueryBuilder("e")
-                    .innerJoin("e.materiais", "m")
-                    .select("e.status", "status")
-                    .addSelect("COALESCE(SUM(m.quantidade), 0)", "total")
-                    .where("e.pep IN (:...peps)", { peps: fullPeps })
-                    .andWhere("e.status != :cancelled", { cancelled: "CANCELADO" })
-                    .groupBy("e.status")
-                    .getRawMany<{ status: string; total: string }>();
+        // Batch query: necessaria per pep
+        const pepNecRows =
+            allFullPeps.length > 0
+                ? await this.itemRepo
+                      .createQueryBuilder("i")
+                      .innerJoin("i.projeto_pep", "pep")
+                      .select("pep.id", "pepId")
+                      .addSelect(
+                          "COALESCE(SUM(i.quantidade_necessaria), 0)",
+                          "total",
+                      )
+                      .groupBy("pep.id")
+                      .getRawMany<{ pepId: string; total: string }>()
+                : [];
 
-                const byStatus = Object.fromEntries(
-                    deliveryRows.map((r) => [r.status, Number(r.total)]),
-                );
-
-                // Manual base (for already_started projects)
-                const manualResult = projeto.already_started
-                    ? await this.itemRepo
-                          .createQueryBuilder("i")
-                          .innerJoin("i.projeto_pep", "pep")
-                          .innerJoin("pep.projeto", "proj")
-                          .where("proj.id = :id", { id: projeto.id })
-                          .andWhere("i.quantidade_entregue_manual IS NOT NULL")
-                          .select(
-                              "COALESCE(SUM(i.quantidade_entregue_manual), 0)",
-                              "total",
-                          )
-                          .getRawOne<{ total: string }>()
-                    : null;
-                const manual = Number(manualResult?.total ?? 0);
-
-                return {
-                    id: projeto.id,
-                    total_necessaria,
-                    total_separado: byStatus["SEPARACAO"] ?? 0,
-                    total_enviado: byStatus["ENVIADO"] ?? 0,
-                    total_entregue: (byStatus["ENTREGUE"] ?? 0) + manual,
-                };
-            }),
+        const pepNecMap = new Map(
+            pepNecRows.map((r) => [r.pepId, Number(r.total)]),
         );
 
-        const statsMap = new Map(statsResults.map((s) => [s.id, s]));
+        // Batch query: manual base per project (for already_started)
+        const alreadyStartedIds = projetos
+            .filter((p) => p.already_started)
+            .map((p) => p.id);
+
+        const manualRows =
+            alreadyStartedIds.length > 0
+                ? await this.itemRepo
+                      .createQueryBuilder("i")
+                      .innerJoin("i.projeto_pep", "pep")
+                      .innerJoin("pep.projeto", "proj")
+                      .where("proj.id IN (:...ids)", { ids: alreadyStartedIds })
+                      .andWhere("i.quantidade_entregue_manual IS NOT NULL")
+                      .select("proj.id", "projetoId")
+                      .addSelect("pep.id", "pepId")
+                      .addSelect(
+                          "COALESCE(SUM(i.quantidade_entregue_manual), 0)",
+                          "total",
+                      )
+                      .groupBy("proj.id")
+                      .addGroupBy("pep.id")
+                      .getRawMany<{
+                          projetoId: string;
+                          pepId: string;
+                          total: string;
+                      }>()
+                : [];
+
+        // pepId -> manual qty
+        const pepManualMap = new Map(
+            manualRows.map((r) => [r.pepId, Number(r.total)]),
+        );
 
         return projetos.map((p) => {
-            const s = statsMap.get(p.id) ?? {
-                total_necessaria: 0,
-                total_separado: 0,
-                total_enviado: 0,
-                total_entregue: 0,
-            };
+            const peps = p.peps ?? [];
+
+            let total_necessaria = 0;
+            let total_separado = 0;
+            let total_enviado = 0;
+            let total_entregue = 0;
+
+            const pepsWithStats = peps.map((pep) => {
+                const nec = pepNecMap.get(pep.id) ?? 0;
+                const delivery = pepDeliveryMap.get(pep.id) ?? {};
+                const manual = pepManualMap.get(pep.id) ?? 0;
+                const entregue = (delivery["ENTREGUE"] ?? 0) + manual;
+
+                total_necessaria += nec;
+                total_separado += delivery["SEPARACAO"] ?? 0;
+                total_enviado += delivery["ENVIADO"] ?? 0;
+                total_entregue += entregue;
+
+                const pct_entregue =
+                    nec > 0 ? Math.round((entregue / nec) * 100) : null;
+                return { ...pep, pct_entregue };
+            });
+
             const pct_entregue =
-                s.total_necessaria > 0
-                    ? Math.round((s.total_entregue / s.total_necessaria) * 100)
+                total_necessaria > 0
+                    ? Math.round((total_entregue / total_necessaria) * 100)
                     : null;
-            return { ...p, ...s, pct_entregue };
+
+            return {
+                ...p,
+                peps: pepsWithStats,
+                total_necessaria,
+                total_separado,
+                total_enviado,
+                total_entregue,
+                pct_entregue,
+            };
         });
     }
 
@@ -240,7 +336,8 @@ class ProjetosService implements IProjetosService {
             where: { id },
             relations: { peps: true },
         });
-        if (!projeto) throw new NotFoundException(`Projeto ${id} não encontrado`);
+        if (!projeto)
+            throw new NotFoundException(`Projeto ${id} não encontrado`);
         return projeto;
     }
 
@@ -250,8 +347,32 @@ class ProjetosService implements IProjetosService {
             nome: dto.nome,
             pep_prefix: dto.pep_prefix,
             pm: dto.pm,
-            analista: dto.analista,
+            analista: dto.analista ?? projeto.analista,
             already_started: dto.already_started ?? projeto.already_started,
+            secao: dto.secao ?? null,
+            cliente: dto.cliente ?? null,
+            produto: dto.produto ?? null,
+            zvgp_projeto: dto.zvgp_projeto ?? null,
+            zrgp: dto.zrgp ?? null,
+            data_preparacao: dto.data_preparacao ?? null,
+            pep_faturavel: dto.pep_faturavel ?? null,
+            cns_ano: dto.cns_ano ?? null,
+            gerador_projeto: dto.gerador_projeto ?? null,
+            ordem_venda: dto.ordem_venda ?? null,
+            data_primeiro_envio: dto.data_primeiro_envio ?? null,
+            ordem_pedido_compra: dto.ordem_pedido_compra ?? null,
+            valor_total_liq: dto.valor_total_liq ?? null,
+            ml: dto.ml ?? null,
+            is_cpc: dto.is_cpc ?? null,
+            is_cpc47: dto.is_cpc47 ?? null,
+            claim: dto.claim ?? null,
+            data_claim: dto.data_claim ?? null,
+            observacoes_chefe: dto.observacoes_chefe ?? null,
+            data_criacao_pep: dto.data_criacao_pep ?? null,
+            idioma: dto.idioma ?? null,
+            empresa: dto.empresa ?? null,
+            contatos_cliente: dto.contatos_cliente ?? null,
+            contatos_weg: dto.contatos_weg ?? null,
         });
         await this.projetoRepo.save(projeto);
         return this.getProjeto(id);
@@ -259,14 +380,21 @@ class ProjetosService implements IProjetosService {
 
     // ─── PEPs ────────────────────────────────────────────────────────────────
 
-    async addPep(projetoId: string, dto: ProjetoPepFormDto): Promise<ProjetoPep> {
+    async addPep(
+        projetoId: string,
+        dto: ProjetoPepFormDto,
+    ): Promise<ProjetoPep> {
         const projeto = await this.findProjeto(projetoId);
         const pep = this.pepRepo.create({
             projeto,
             nome: dto.nome ?? null,
             pep_suffix: dto.pep_suffix,
-            zvgp: dto.zvgp,
-            gerador: dto.gerador,
+            zvgp: dto.zvgp ?? null,
+            zrgp: dto.zrgp ?? null,
+            gerador: dto.gerador ?? null,
+            data_preparacao: dto.data_preparacao ?? null,
+            ml: dto.ml ?? null,
+            is_cpc: dto.is_cpc ?? null,
         });
         return this.pepRepo.save(pep);
     }
@@ -280,8 +408,12 @@ class ProjetosService implements IProjetosService {
         Object.assign(pep, {
             nome: dto.nome ?? null,
             pep_suffix: dto.pep_suffix,
-            zvgp: dto.zvgp,
-            gerador: dto.gerador,
+            zvgp: dto.zvgp ?? null,
+            zrgp: dto.zrgp ?? null,
+            gerador: dto.gerador ?? null,
+            data_preparacao: dto.data_preparacao ?? null,
+            ml: dto.ml ?? null,
+            is_cpc: dto.is_cpc ?? null,
         });
         return this.pepRepo.save(pep);
     }
@@ -358,7 +490,8 @@ class ProjetosService implements IProjetosService {
             where: { id },
             relations: { peps: { items: true } },
         });
-        if (!projeto) throw new NotFoundException(`Projeto ${id} não encontrado`);
+        if (!projeto)
+            throw new NotFoundException(`Projeto ${id} não encontrado`);
 
         const enrichedPeps: ProjetoPepEnriched[] = await Promise.all(
             (projeto.peps ?? []).map(async (pep) => {
@@ -371,7 +504,9 @@ class ProjetosService implements IProjetosService {
                     .select("m.sap", "sap")
                     .addSelect("MAX(m.descricao)", "descricao")
                     .where("e.pep = :pep", { pep: fullPep })
-                    .andWhere("e.status != :cancelled", { cancelled: "CANCELADO" })
+                    .andWhere("e.status != :cancelled", {
+                        cancelled: "CANCELADO",
+                    })
                     .groupBy("m.sap")
                     .getRawMany<{ sap: string; descricao: string }>();
 
@@ -395,7 +530,8 @@ class ProjetosService implements IProjetosService {
                             fullPep,
                             sap,
                         );
-                        const manual = existingItem?.quantidade_entregue_manual ?? 0;
+                        const manual =
+                            existingItem?.quantidade_entregue_manual ?? 0;
 
                         if (existingItem) {
                             return {
@@ -403,7 +539,8 @@ class ProjetosService implements IProjetosService {
                                 is_virtual: false,
                                 quantidade_separado: delivered.separado,
                                 quantidade_enviado: delivered.enviado,
-                                quantidade_entregue: delivered.entregue + manual,
+                                quantidade_entregue:
+                                    delivered.entregue + manual,
                             } as ProjetoItemEnriched;
                         }
 
@@ -506,35 +643,74 @@ class ProjetosService implements IProjetosService {
 
     // ─── Lookup / Import ──────────────────────────────────────────────────────
 
-    async lookupPepSuffixes(
-        prefix: string,
-    ): Promise<Array<{ pep_suffix: string; zvgp: string; gerador: string; ufv: string }>> {
-        const rows = await this.envioRepo
-            .createQueryBuilder("e")
-            .select("e.pep", "pep")
-            .addSelect("MAX(e.zvgp)", "zvgp")
-            .addSelect("MAX(e.gerador)", "gerador")
-            .addSelect("MAX(e.ufv)", "ufv")
-            .where("e.pep LIKE :pattern", { pattern: `${prefix}-%` })
-            .groupBy("e.pep")
-            .orderBy("e.pep")
-            .getRawMany<{ pep: string; zvgp: string; gerador: string; ufv: string }>();
-
-        const seen = new Set<string>();
-        const result: Array<{
+    async lookupPepSuffixes(prefix: string): Promise<
+        Array<{
             pep_suffix: string;
             zvgp: string;
             gerador: string;
             ufv: string;
-        }> = [];
-        for (const row of rows) {
-            const suffix = row.pep.slice(prefix.length);
-            if (!seen.has(suffix)) {
-                seen.add(suffix);
-                result.push({ pep_suffix: suffix, zvgp: row.zvgp, gerador: row.gerador, ufv: row.ufv ?? '' });
-            }
+        }>
+    > {
+        const [envioRows, pepRows] = await Promise.all([
+            this.envioRepo
+                .createQueryBuilder("e")
+                .select("e.pep", "pep")
+                .addSelect("MAX(e.zvgp)", "zvgp")
+                .addSelect("MAX(e.gerador)", "gerador")
+                .addSelect("MAX(e.ufv)", "ufv")
+                .where("e.pep LIKE :pattern", { pattern: `${prefix}-%` })
+                .groupBy("e.pep")
+                .orderBy("e.pep")
+                .getRawMany<{
+                    pep: string;
+                    zvgp: string;
+                    gerador: string;
+                    ufv: string;
+                }>(),
+            this.pepRepo
+                .createQueryBuilder("pp")
+                .innerJoin("pp.projeto", "proj")
+                .select("pp.pep_suffix", "pep_suffix")
+                .addSelect("pp.zvgp", "zvgp")
+                .addSelect("pp.gerador", "gerador")
+                .addSelect("pp.nome", "ufv")
+                .where("proj.pep_prefix = :prefix", { prefix })
+                .getRawMany<{
+                    pep_suffix: string;
+                    zvgp: string;
+                    gerador: string;
+                    ufv: string;
+                }>(),
+        ]);
+
+        // Build map from suffix → result; projeto_peps first, envios override (richer data)
+        const map = new Map<
+            string,
+            { pep_suffix: string; zvgp: string; gerador: string; ufv: string }
+        >();
+
+        for (const row of pepRows) {
+            map.set(row.pep_suffix, {
+                pep_suffix: row.pep_suffix,
+                zvgp: row.zvgp ?? "",
+                gerador: row.gerador ?? "",
+                ufv: row.ufv ?? "",
+            });
         }
-        return result;
+
+        for (const row of envioRows) {
+            const suffix = row.pep.slice(prefix.length);
+            map.set(suffix, {
+                pep_suffix: suffix,
+                zvgp: row.zvgp ?? "",
+                gerador: row.gerador ?? "",
+                ufv: row.ufv ?? "",
+            });
+        }
+
+        return [...map.values()].sort((a, b) =>
+            a.pep_suffix.localeCompare(b.pep_suffix),
+        );
     }
 
     async getPepItems(fullPep: string): Promise<ProjetoItemEnriched[]> {
@@ -554,9 +730,15 @@ class ProjetosService implements IProjetosService {
 
         const enriched: ProjetoItemEnriched[] = await Promise.all(
             items.map(async (item) => {
-                const delivered = await this.computeDeliveredByStatus(fullPep, item.sap);
+                const delivered = await this.computeDeliveredByStatus(
+                    fullPep,
+                    item.sap,
+                );
                 const entregue =
-                    delivered.entregue + (projeto.already_started ? (item.quantidade_entregue_manual ?? 0) : 0);
+                    delivered.entregue +
+                    (projeto.already_started
+                        ? (item.quantidade_entregue_manual ?? 0)
+                        : 0);
                 return {
                     ...item,
                     quantidade_separado: delivered.separado,
@@ -578,7 +760,12 @@ class ProjetosService implements IProjetosService {
             .addSelect("MAX(e.gerador)", "gerador")
             .groupBy("e.pep")
             .orderBy("e.pep")
-            .getRawMany<{ pep: string; ufv: string; zvgp: string; gerador: string }>();
+            .getRawMany<{
+                pep: string;
+                ufv: string;
+                zvgp: string;
+                gerador: string;
+            }>();
 
         type GroupEntry = {
             ufv: string;
@@ -595,7 +782,10 @@ class ProjetosService implements IProjetosService {
             }
             const group = prefixMap.get(prefix)!;
             if (!group.suffixes.has(suffix)) {
-                group.suffixes.set(suffix, { zvgp: row.zvgp, gerador: row.gerador });
+                group.suffixes.set(suffix, {
+                    zvgp: row.zvgp,
+                    gerador: row.gerador,
+                });
             }
         }
 
@@ -620,9 +810,17 @@ class ProjetosService implements IProjetosService {
                 });
                 const saved = await this.projetoRepo.save(projeto);
 
-                for (const [suffix, { zvgp, gerador }] of group.suffixes.entries()) {
+                for (const [
+                    suffix,
+                    { zvgp, gerador },
+                ] of group.suffixes.entries()) {
                     await this.pepRepo.save(
-                        this.pepRepo.create({ projeto: saved, pep_suffix: suffix, zvgp, gerador }),
+                        this.pepRepo.create({
+                            projeto: saved,
+                            pep_suffix: suffix,
+                            zvgp,
+                            gerador,
+                        }),
                     );
                 }
 
@@ -636,7 +834,10 @@ class ProjetosService implements IProjetosService {
                     (existingProject.peps ?? []).map((p) => p.pep_suffix),
                 );
                 let addedAny = false;
-                for (const [suffix, { zvgp, gerador }] of group.suffixes.entries()) {
+                for (const [
+                    suffix,
+                    { zvgp, gerador },
+                ] of group.suffixes.entries()) {
                     if (!existingSuffixes.has(suffix)) {
                         await this.pepRepo.save(
                             this.pepRepo.create({

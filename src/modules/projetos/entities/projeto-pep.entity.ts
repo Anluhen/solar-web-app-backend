@@ -61,13 +61,53 @@ export default class ProjetoPep {
     @Column({ type: "text" })
     pep_suffix!: string;
 
-    @ApiProperty({ required: true, description: "Código ZVGP desta lista" })
-    @Column({ type: "text" })
-    zvgp!: string;
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        description: "Código ZVGP desta lista",
+    })
+    @Column({ type: "text", nullable: true })
+    zvgp?: string | null;
 
-    @ApiProperty({ required: true, description: "Código Gerador desta lista" })
-    @Column({ type: "text" })
-    gerador!: string;
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        description: "Código ZRGP desta lista",
+    })
+    @Column({ type: "text", nullable: true })
+    zrgp?: string | null;
+
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        description: "Código Gerador desta lista",
+    })
+    @Column({ type: "text", nullable: true })
+    gerador?: string | null;
+
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        description: "Data de preparação (Solar por PEP)",
+    })
+    @Column({ type: "date", nullable: true })
+    data_preparacao?: Date | null;
+
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        description: "ML (Solar por PEP)",
+    })
+    @Column({ type: "numeric", nullable: true })
+    ml?: number | null;
+
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        description: "CPC (Solar por PEP)",
+    })
+    @Column({ type: "boolean", nullable: true })
+    is_cpc?: boolean | null;
 
     @ApiProperty({ required: true, type: String, description: "ISO date-time" })
     @CreateDateColumn({ type: "timestamptz", default: () => "now()" })

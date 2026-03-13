@@ -13,7 +13,10 @@ import { ApiProperty } from "@nestjs/swagger";
 import { StatusEnvio } from "../rules/status.rules";
 
 @Entity("envios")
-@Check("CHK_envio_status", `"status" IN ('RASCUNHO','SEPARACAO','ENVIADO','ENTREGUE','CANCELADO')`)
+@Check(
+    "CHK_envio_status",
+    `"status" IN ('RASCUNHO','SEPARACAO','ENVIADO','ENTREGUE','CANCELADO')`,
+)
 @Index("envios_gerador_idx", ["gerador"])
 @Index("envios_pep_idx", ["pep"])
 @Index("envios_zvgp_idx", ["zvgp"])
@@ -68,15 +71,30 @@ export default class Envio {
     @Column({ type: "date", default: () => "CURRENT_DATE" })
     separacao!: string;
 
-    @ApiProperty({ required: false, nullable: true, type: String, description: "YYYY-MM-DD — date when shipment was dispatched" })
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        type: String,
+        description: "YYYY-MM-DD — date when shipment was dispatched",
+    })
     @Column({ type: "date", nullable: true })
     data_enviado?: string | null;
 
-    @ApiProperty({ required: false, nullable: true, type: String, description: "YYYY-MM-DD — date when delivery was confirmed" })
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        type: String,
+        description: "YYYY-MM-DD — date when delivery was confirmed",
+    })
     @Column({ type: "date", nullable: true })
     data_entregue?: string | null;
 
-    @ApiProperty({ required: false, nullable: true, type: String, description: "YYYY-MM-DD — estimated arrival date" })
+    @ApiProperty({
+        required: false,
+        nullable: true,
+        type: String,
+        description: "YYYY-MM-DD — estimated arrival date",
+    })
     @Column({ type: "date", nullable: true })
     previsao_chegada?: string | null;
 

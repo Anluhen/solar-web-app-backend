@@ -7,7 +7,6 @@ import { StatusRulesService } from "./rules/status.rules";
 import { EnviosController } from "./controllers/envios.controller";
 import MateriaisModule from "../materiais/materiais.module";
 import MailModule from "../mail/mail.module";
-import mailServiceProvider from "../mail/services/mail.service";
 
 @Module({
     imports: [

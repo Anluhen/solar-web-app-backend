@@ -2,7 +2,10 @@ import { ApiProperty } from "@nestjs/swagger";
 import { IsInt, IsNotEmpty, IsOptional, IsString } from "class-validator";
 
 export default class ProjetoItemFormDto {
-    @ApiProperty({ type: String, description: "Código SAP (bigint como string)" })
+    @ApiProperty({
+        type: String,
+        description: "Código SAP (bigint como string)",
+    })
     @IsString()
     @IsNotEmpty()
     sap!: string;

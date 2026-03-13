@@ -1,6 +1,6 @@
 import { Test } from "@nestjs/testing";
 import { INestApplication } from "@nestjs/common";
-import * as request from "supertest";
+// import * as request from "supertest";
 import ItemsModule from "../modules/items/items.module";
 import { IItemsService } from "../modules/items/interfaces/items.service.interface";
 import ItemFormDto from "../modules/items/dtos/item-form.dto";

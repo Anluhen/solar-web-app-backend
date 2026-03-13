@@ -33,8 +33,15 @@ export class ProjetosController {
         @Query("pep_prefix") pep_prefix?: string,
         @Query("pm") pm?: string,
         @Query("analista") analista?: string,
+        @Query("secao") secao?: string,
     ) {
-        return this.svc.listProjetosWithStats({ nome, pep_prefix, pm, analista });
+        return this.svc.listProjetosWithStats({
+            nome,
+            pep_prefix,
+            pm,
+            analista,
+            secao,
+        });
     }
 
     // Static sub-routes must come BEFORE dynamic :id routes
