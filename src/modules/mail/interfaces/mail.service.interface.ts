@@ -7,6 +7,7 @@ export abstract class IMailService {
         subject: string,
         html: string,
         userEmail: string,
+        userToken: string,
         text?: string,
     ): Promise<void>;
 }

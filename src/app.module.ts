@@ -8,11 +8,13 @@ import EnviosModule from "./modules/envios/envios.module";
 import MateriaisModule from "./modules/materiais/materiais.module";
 import MailModule from "./modules/mail/mail.module";
 import ProjetosModule from "./modules/projetos/projetos.module";
+import { AuthenticationModule } from "./modules/authentication/authentication.module";
 
 @Module({
     imports: [
         ItemsModule,
         ConfigurationModule,
+        AuthenticationModule,
         HealthModule,
         PostgresModule,
         StaffModule,
