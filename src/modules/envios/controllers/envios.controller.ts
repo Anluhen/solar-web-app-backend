@@ -7,7 +7,6 @@ import {
     Post,
     Put,
     Query,
-    Headers,
 } from "@nestjs/common";
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import MaterialEntity from "../../materiais/entities/material.entity";
@@ -17,6 +16,8 @@ import EnvioEntity from "../entities/envio.entity";
 import { IEnviosService } from "../interfaces/envios.service.interface";
 import { StatusEnvio, StatusRule } from "../rules/status.rules";
 import { StatusRulesService } from "../rules/status.rules";
+import { User } from "../../authentication/decorators/user.decorator";
+import UserEntity from "../../authentication/entities/user.entity";
 
 @Controller("envios")
 @ApiTags("Envios")
@@ -71,17 +72,13 @@ export class EnviosController {
             data_enviado?: string;
             data_entregue?: string;
         },
-        @Headers("x-user-email") userEmail: string,
+        @User() user: UserEntity,
     ): Promise<{ id: string; status: string; error?: string }[]> {
-        return this.enviosService.bulkAdvanceStatus(
-            body.ids ?? [],
-            userEmail ?? "",
-            {
-                separacao: body.separacao,
-                data_enviado: body.data_enviado,
-                data_entregue: body.data_entregue,
-            },
-        );
+        return this.enviosService.bulkAdvanceStatus(body.ids ?? [], user.username, user.token, {
+            separacao: body.separacao,
+            data_enviado: body.data_enviado,
+            data_entregue: body.data_entregue,
+        });
     }
 
     @Put(":id")
@@ -158,9 +155,9 @@ export class EnviosController {
     advanceStatus(
         @Param("id") id: string,
         @Body() dto: EnvioFormDto,
-        @Headers("x-user-email") userEmail: string,
+        @User() user: UserEntity,
     ): Promise<EnvioEntity> {
-        return this.enviosService.advanceStatus(id, dto, userEmail);
+        return this.enviosService.advanceStatus(id, dto, user.username, user.token);
     }
 
     @Put(":id/prevstatus")
@@ -168,8 +165,8 @@ export class EnviosController {
     returnStatus(
         @Param("id") id: string,
         @Body() dto: EnvioFormDto,
-        @Headers("x-user-email") userEmail: string,
+        @User() user: UserEntity,
     ): Promise<EnvioEntity> {
-        return this.enviosService.returnStatus(id, dto, userEmail);
+        return this.enviosService.returnStatus(id, dto, user.username, user.token);
     }
 }

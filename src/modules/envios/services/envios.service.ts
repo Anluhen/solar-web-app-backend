@@ -106,6 +106,7 @@ class EnviosService implements IEnviosService {
         id: string,
         dto: EnvioFormDto,
         userEmail: string,
+        userToken: string,
     ): Promise<EnvioEntity> {
         const current = await this.getEnvio(id);
 
@@ -157,15 +158,14 @@ class EnviosService implements IEnviosService {
                 throw new BadRequestException({
                     message: "EMAIL_CONFIRMATION_REQUIRED",
                     emailData: {
-                        from: "mailer@example.com",
-                        cc: userEmail,
+                        from: userEmail,
                         to: Array.isArray(to) ? to : [to],
                         subject,
                     },
                 });
             }
 
-            await this.notifyStatusChange(to, subject, htmlBody, userEmail);
+            await this.notifyStatusChange(to, subject, htmlBody, userEmail, userToken);
         }
 
         return this.putEnvio(id, payload);
@@ -175,6 +175,7 @@ class EnviosService implements IEnviosService {
         id: string,
         dto: EnvioFormDto,
         userEmail: string,
+        userToken: string,
     ): Promise<EnvioEntity> {
         const current = await this.getEnvio(id);
 
@@ -218,17 +219,14 @@ class EnviosService implements IEnviosService {
                 throw new BadRequestException({
                     message: "EMAIL_CONFIRMATION_REQUIRED",
                     emailData: {
-                        from: this.configService.getOrThrow(
-                            ENV_VARIABLE_NAMES.MAIL_USERNAME,
-                        ),
-                        cc: userEmail,
+                        from: userEmail,
                         to: Array.isArray(to) ? to : [to],
                         subject,
                     },
                 });
             }
 
-            await this.notifyStatusChange(to, subject, htmlBody, userEmail);
+            await this.notifyStatusChange(to, subject, htmlBody, userEmail, userToken);
         }
 
         return this.putEnvio(id, payload);
@@ -237,11 +235,8 @@ class EnviosService implements IEnviosService {
     async bulkAdvanceStatus(
         ids: string[],
         userEmail: string,
-        dates?: {
-            separacao?: string;
-            data_enviado?: string;
-            data_entregue?: string;
-        },
+        userToken: string,
+        dates?: { separacao?: string; data_enviado?: string; data_entregue?: string },
     ): Promise<{ id: string; status: string; error?: string }[]> {
         const results: { id: string; status: string; error?: string }[] = [];
 
@@ -262,6 +257,7 @@ class EnviosService implements IEnviosService {
                         }),
                     } as any,
                     userEmail,
+                    userToken,
                 );
                 results.push({ id, status: updated.status });
             } catch (err) {
@@ -414,6 +410,7 @@ class EnviosService implements IEnviosService {
         subject: string,
         htmlBody: string,
         userEmail: string,
+        userToken: string,
     ): Promise<void> {
         if (
             !recipients ||
@@ -431,6 +428,7 @@ class EnviosService implements IEnviosService {
                 subject,
                 htmlBody,
                 userEmail,
+                userToken,
             );
         } catch {
             throw new InternalServerErrorException(
