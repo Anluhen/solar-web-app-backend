@@ -201,7 +201,7 @@ class ProjetosService implements IProjetosService {
         const pepFullToId = new Map<string, string>();
         for (const projeto of projetos) {
             for (const pep of projeto.peps ?? []) {
-                const full = projeto.pep_prefix + pep.pep_suffix;
+                const full = projeto.pep_prefix + '-' + pep.pep_suffix;
                 allFullPeps.push(full);
                 pepFullToId.set(full, pep.id);
             }
@@ -421,7 +421,7 @@ class ProjetosService implements IProjetosService {
     async removePep(projetoId: string, pepId: string): Promise<void> {
         const projeto = await this.findProjeto(projetoId);
         const pep = await this.findPep(projetoId, pepId);
-        const fullPep = projeto.pep_prefix + pep.pep_suffix;
+        const fullPep = projeto.pep_prefix + '-' + pep.pep_suffix;
 
         const enviados = await this.envioRepo.count({
             where: { pep: fullPep, status: "ENVIADO" as any },
@@ -495,7 +495,7 @@ class ProjetosService implements IProjetosService {
 
         const enrichedPeps: ProjetoPepEnriched[] = await Promise.all(
             (projeto.peps ?? []).map(async (pep) => {
-                const fullPep = projeto.pep_prefix + pep.pep_suffix;
+                const fullPep = projeto.pep_prefix + '-' + pep.pep_suffix;
 
                 // Query distinct SAPs that appear in envio materials for this full PEP
                 const envioMats = await this.envioRepo
@@ -633,7 +633,7 @@ class ProjetosService implements IProjetosService {
         });
         if (peps.length === 0) return [];
 
-        const fullPeps = peps.map((pep) => projeto.pep_prefix + pep.pep_suffix);
+        const fullPeps = peps.map((pep) => projeto.pep_prefix + '-' + pep.pep_suffix);
 
         return this.envioRepo.find({
             where: fullPeps.map((pep) => ({ pep })),
@@ -699,7 +699,8 @@ class ProjetosService implements IProjetosService {
         }
 
         for (const row of envioRows) {
-            const suffix = row.pep.slice(prefix.length);
+            const rawSuffix = row.pep.slice(prefix.length);
+            const suffix = rawSuffix.startsWith('-') ? rawSuffix.slice(1) : rawSuffix;
             map.set(suffix, {
                 pep_suffix: suffix,
                 zvgp: row.zvgp ?? "",
@@ -717,7 +718,7 @@ class ProjetosService implements IProjetosService {
         const lastDash = fullPep.lastIndexOf("-");
         if (lastDash <= 0) return [];
         const prefix = fullPep.slice(0, lastDash);
-        const suffix = fullPep.slice(lastDash);
+        const suffix = fullPep.slice(lastDash + 1);
 
         const pep = await this.pepRepo.findOne({
             where: { pep_suffix: suffix, projeto: { pep_prefix: prefix } },
@@ -776,7 +777,7 @@ class ProjetosService implements IProjetosService {
             const lastDash = row.pep.lastIndexOf("-");
             if (lastDash <= 0) continue;
             const prefix = row.pep.slice(0, lastDash);
-            const suffix = row.pep.slice(lastDash);
+            const suffix = row.pep.slice(lastDash + 1);
             if (!prefixMap.has(prefix)) {
                 prefixMap.set(prefix, { ufv: row.ufv, suffixes: new Map() });
             }
