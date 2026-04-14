@@ -41,6 +41,8 @@ run:migrations:qa:
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: on_success
+    - if: '$CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH'
+      when: manual
 
 clear:migrations:prd:
   stage: deploy
@@ -94,12 +96,16 @@ run:migrations:prd:
       when: on_success
 
 deploy:qa:
-  needs:
-    - run:migrations:qa
   environment: qas
   rules:
     - if: '$CI_COMMIT_BRANCH == "master"'
       when: on_success
+      needs:
+        - run:migrations:qa
+    - if: '$CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH'
+      when: manual
+      needs:
+        - run:migrations:qa
 
 deploy:prd:
   needs:

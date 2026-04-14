@@ -62,9 +62,7 @@ export class JWTStrategy extends PassportStrategy(Strategy) {
             username: payload.preferred_username,
             name: payload.name,
             token: undefined,
-            roles: payload["resource_access"]
-                ? payload["resource_access"][this.audience].roles
-                : [],
+            roles: payload["resource_access"]?.[this.audience]?.roles ?? [],
         };
     }
 }

@@ -9,6 +9,7 @@ import MateriaisModule from "./modules/materiais/materiais.module";
 import MailModule from "./modules/mail/mail.module";
 import ProjetosModule from "./modules/projetos/projetos.module";
 import { AuthenticationModule } from "./modules/authentication/authentication.module";
+import KaizenModule from "./modules/kaizen/kaizen.module";
 
 @Module({
     imports: [
@@ -16,6 +17,7 @@ import { AuthenticationModule } from "./modules/authentication/authentication.mo
         ConfigurationModule,
         AuthenticationModule,
         HealthModule,
+        KaizenModule,
         PostgresModule,
         StaffModule,
         EnviosModule,
