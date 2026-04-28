@@ -56,7 +56,6 @@ export const STATUS_RULES: Record<StatusEnvio, StatusRule> = {
         name: "Separação",
         required: ["data_enviado"],
         editable: ["separacao", "data_enviado", "observacoes"],
-        notify: ["kamila@weg.net", "dihego@weg.net", "mmazzucco@weg.net"],
         next: StatusEnvio.ENVIADO,
         previous: StatusEnvio.CANCELADO,
     },
@@ -107,28 +106,21 @@ const DEFAULT_STATUS_RULE: StatusRule = {
 
 @Injectable()
 export class StatusRulesService {
-    private readonly isProd: boolean;
     private readonly statusRules: Record<StatusEnvio, StatusRule>;
 
     constructor(private readonly configService: ConfigService) {
-        const nodeEnv = (
-            this.configService.get(ENV_VARIABLE_NAMES.NODE_ENV) || ""
-        )
-            .trim()
-            .toLowerCase();
-        this.isProd = nodeEnv === "production";
-
-        console.log(
-            `[StatusRulesService] NODE_ENV: "${nodeEnv}", isProd: ${this.isProd}`,
+        const raw = this.configService.get<string>(
+            ENV_VARIABLE_NAMES.SEPARACAO_NOTIFY_EMAILS,
         );
+        const notify = raw
+            ? raw.split(",").map((e) => e.trim()).filter(Boolean)
+            : [];
 
         this.statusRules = {
             ...STATUS_RULES,
             [StatusEnvio.SEPARACAO]: {
                 ...STATUS_RULES[StatusEnvio.SEPARACAO],
-                notify: !this.isProd
-                    ? ["e-henchenski@weg.net", "e-henchenski@weg.net"]
-                    : STATUS_RULES[StatusEnvio.SEPARACAO].notify,
+                notify,
             },
         };
     }
