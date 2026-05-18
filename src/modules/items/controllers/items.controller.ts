@@ -13,7 +13,7 @@ import ItemEntity from "../entities/item.entity";
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { IItemsService } from "../interfaces/items.service.interface";
 
-@Controller("api/items")
+@Controller("items")
 @ApiTags("Items")
 export class ItemsController {
     constructor(private readonly itemsService: IItemsService) {}

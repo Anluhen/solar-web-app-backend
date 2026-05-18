@@ -142,9 +142,7 @@ class EnviosService implements IEnviosService {
             payload.status === StatusEnvio.SEPARACAO &&
             !dto.skip_email
         ) {
-            const to = this.statusRulesService.getStatus(
-                payload.status,
-            )?.notify;
+            const to = await this.statusRulesService.getSeparacaoNotifyEmails();
             const subject = `${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `;
             const htmlBody = this.buildStatusEmail(
                 subject,
@@ -159,7 +157,7 @@ class EnviosService implements IEnviosService {
                     message: "EMAIL_CONFIRMATION_REQUIRED",
                     emailData: {
                         from: userEmail,
-                        to: Array.isArray(to) ? to : [to],
+                        to,
                         subject,
                     },
                 });
@@ -203,9 +201,7 @@ class EnviosService implements IEnviosService {
             payload.status !== current.status &&
             payload.status === StatusEnvio.CANCELADO
         ) {
-            const to = this.statusRulesService.getStatus(
-                current.status,
-            )?.notify;
+            const to = await this.statusRulesService.getSeparacaoNotifyEmails();
             const subject = `CANCELAMENTO - ${current.id} - Solicitação de Separação - ${current.ufv} - ${current.pep} `;
             const htmlBody = this.buildStatusEmail(
                 subject,
@@ -220,7 +216,7 @@ class EnviosService implements IEnviosService {
                     message: "EMAIL_CONFIRMATION_REQUIRED",
                     emailData: {
                         from: userEmail,
-                        to: Array.isArray(to) ? to : [to],
+                        to,
                         subject,
                     },
                 });

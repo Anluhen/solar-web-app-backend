@@ -3,7 +3,9 @@ import {
     Controller,
     Delete,
     Get,
+    Headers,
     Param,
+    Patch,
     Post,
     Put,
     Query,
@@ -35,16 +37,30 @@ export class ProjetosController {
         @Query("analista") analista?: string,
         @Query("secao") secao?: string,
     ) {
-        return this.svc.listProjetosWithStats({
-            nome,
-            pep_prefix,
-            pm,
-            analista,
-            secao,
-        });
+        return this.svc.listProjetosWithStats({ nome, pep_prefix, pm, analista, secao });
     }
 
     // Static sub-routes must come BEFORE dynamic :id routes
+
+    @Get("by-zvgp")
+    getByZvgp(@Query("zvgp") zvgp: string) {
+        return this.svc.getByZvgp(zvgp ?? "");
+    }
+
+    @Get("contact-suggestions")
+    getContactSuggestions() {
+        return this.svc.getContactSuggestions();
+    }
+
+    @Get("produto-options")
+    getProdutoOptions() {
+        return this.svc.getProdutoOptions();
+    }
+
+    @Put("produto-options")
+    putProdutoOptions(@Body() body: Record<string, string[]>) {
+        return this.svc.putProdutoOptions(body);
+    }
 
     @Get("pep-lookup")
     lookupPepSuffixes(@Query("prefix") prefix: string) {
@@ -56,13 +72,15 @@ export class ProjetosController {
         return this.svc.getPepItems(pep ?? "");
     }
 
+    @Get("zvgp-items")
+    getZvgpItems(@Query("zvgp") zvgp: string) {
+        return this.svc.getZvgpItems(zvgp ?? "");
+    }
+
     @Post("import-from-envios")
     importFromEnvios() {
         return this.svc.importFromEnvios();
     }
-
-    // NOTE: specific sub-routes (:id/summary, :id/aggregate, :id/envios) are
-    // declared before the generic :id route so NestJS matches them first.
 
     @Get(":id/summary")
     getSummary(@Param("id") id: string) {
@@ -89,7 +107,14 @@ export class ProjetosController {
         return this.svc.updateProjeto(id, dto);
     }
 
-    // ── PEPs ─────────────────────────────────────────────────────────────────
+    @Delete(":id")
+    deleteProjeto(@Param("id") id: string) {
+        return this.svc.deleteProjeto(id);
+    }
+
+    // ── PEPs (sibling rows) ───────────────────────────────────────────────────
+    // :id = anchor projetos row id (used to look up pep_prefix)
+    // :pepId = id of the sibling projetos row
 
     @Post(":id/peps")
     addPep(@Param("id") id: string, @Body() dto: ProjetoPepFormDto) {
@@ -111,6 +136,7 @@ export class ProjetosController {
     }
 
     // ── Items ─────────────────────────────────────────────────────────────────
+    // :pepId = projetos row id that owns these items
 
     @Post(":id/peps/:pepId/items/bulk")
     bulkReplaceItems(
@@ -129,5 +155,31 @@ export class ProjetosController {
         @Body() dto: ProjetoItemFormDto,
     ) {
         return this.svc.updateItem(id, pepId, itemId, dto);
+    }
+
+    // ── Workflow ──────────────────────────────────────────────────────────────
+
+    @Patch(":id/workflow-status")
+    patchWorkflowStatus(
+        @Param("id") id: string,
+        @Body() dto: { workflow_status: string; pm?: string },
+        @Headers("x-user-email") userEmail: string,
+        @Headers("authorization") authorization: string,
+    ) {
+        const userToken = authorization?.replace(/^Bearer\s+/i, "") ?? "";
+        return this.svc.patchWorkflowStatus(id, dto, userEmail ?? "", userToken);
+    }
+
+    // ── Email ─────────────────────────────────────────────────────────────────
+
+    @Post(":id/send-email")
+    sendProjetoEmail(
+        @Param("id") id: string,
+        @Body() body: { language: string },
+        @Headers("x-user-email") userEmail: string,
+        @Headers("authorization") authorization: string,
+    ) {
+        const userToken = authorization?.replace(/^Bearer\s+/i, "") ?? "";
+        return this.svc.sendProjetoEmail(id, body.language, userEmail ?? "", userToken);
     }
 }

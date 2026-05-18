@@ -12,7 +12,7 @@ import StaffFormDto from "../dtos/staff-form.dto";
 import StaffEntity from "../entities/staff.entity";
 import { ApiCreatedResponse, ApiOkResponse, ApiTags } from "@nestjs/swagger";
 import { IStaffService } from "../interfaces/staff.service.interface";
-@Controller("api/postgres/staff")
+@Controller("staff")
 @ApiTags("PostgreSql")
 export class StaffController {
     constructor(private readonly staffsService: IStaffService) {}

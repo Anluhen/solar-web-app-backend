@@ -8,11 +8,7 @@ import {
 } from "class-validator";
 
 export default class ProjetoPepFormDto {
-    @ApiProperty({
-        description: "Nome descritivo desta lista (opcional)",
-        required: false,
-        nullable: true,
-    })
+    @ApiProperty({ required: false, nullable: true })
     @IsString()
     @IsOptional()
     nome?: string | null;
@@ -22,58 +18,127 @@ export default class ProjetoPepFormDto {
     @IsNotEmpty()
     pep_suffix!: string;
 
-    @ApiProperty({
-        description: "Código ZVGP desta lista",
-        required: false,
-        nullable: true,
-    })
+    @ApiProperty({ required: false, nullable: true })
     @IsString()
     @IsOptional()
     zvgp?: string | null;
 
-    @ApiProperty({
-        description: "Código ZRGP desta lista",
-        required: false,
-        nullable: true,
-    })
+    @ApiProperty({ required: false, nullable: true })
     @IsString()
     @IsOptional()
     zrgp?: string | null;
 
-    @ApiProperty({
-        description: "Código Gerador desta lista",
-        required: false,
-        nullable: true,
-    })
+    @ApiProperty({ required: false, nullable: true })
     @IsString()
     @IsOptional()
     gerador?: string | null;
 
-    @ApiProperty({
-        description: "Data de preparação (Solar por PEP, YYYY-MM-DD)",
-        required: false,
-        nullable: true,
-    })
+    @ApiProperty({ required: false, nullable: true })
     @IsString()
     @IsOptional()
     data_preparacao?: string | null;
 
-    @ApiProperty({
-        description: "ML (Solar por PEP)",
-        required: false,
-        nullable: true,
-        type: Number,
-    })
+    @ApiProperty({ required: false, nullable: true, type: Number })
     @IsNumber()
     @IsOptional()
     ml?: number | null;
 
-    @ApiProperty({
-        description: "CPC (Solar por PEP)",
-        required: false,
-        nullable: true,
-    })
+    @ApiProperty({ required: false, nullable: true })
     @IsBoolean()
     @IsOptional()
-    is_cpc?: boolean | null;
+    is_cpc47?: boolean | null;
+
+    // ── Per-OV Sistemas/Acionamentos fields ──────────────────────────────────
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    pm?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    produto?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    data_primeiro_envio?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    ordem_pedido_compra?: string | null;
+
+    @ApiProperty({ required: false, nullable: true, type: Number })
+    @IsNumber()
+    @IsOptional()
+    valor_total_liq?: number | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    claim?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    data_claim?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsBoolean()
+    @IsOptional()
+    custos_ipex?: boolean | null;
+
+    // ── Per-OV workflow & communication fields ───────────────────────────────
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    workflow_status?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    observacoes_admin?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    observacoes_chefe?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    idioma?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    contato_cliente_para?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    contato_cliente_cc?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    contato_weg_para?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    contato_weg_cc?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    anexo_ov?: string | null;
+
+    @ApiProperty({ required: false, nullable: true })
+    @IsString()
+    @IsOptional()
+    anexo_outro?: string | null;
 }

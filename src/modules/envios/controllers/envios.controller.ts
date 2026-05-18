@@ -90,6 +90,18 @@ export class EnviosController {
         return this.enviosService.putEnvio(id, envio);
     }
 
+    @Get("notify-emails")
+    async getNotifyEmails(): Promise<{ emails: string[] }> {
+        const emails = await this.statusRulesService.getSeparacaoNotifyEmails();
+        return { emails };
+    }
+
+    @Put("notify-emails")
+    async setNotifyEmails(@Body() body: { emails: string[] }): Promise<{ emails: string[] }> {
+        await this.statusRulesService.setSeparacaoNotifyEmails(body.emails ?? []);
+        return { emails: body.emails ?? [] };
+    }
+
     @Get("status")
     getStatusRule(@Query("status") status?: StatusEnvio): StatusRule {
         return this.statusRulesService.getStatus(status);
