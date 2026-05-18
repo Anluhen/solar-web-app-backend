@@ -92,7 +92,7 @@ describe("Envios Service", () => {
                 },
                 {
                     provide: StatusRulesService,
-                    useValue: new StatusRulesService(configServiceMock as any),
+                    useValue: new StatusRulesService(configServiceMock as any, { get: async () => null } as any),
                 },
                 {
                     provide: IMailService,

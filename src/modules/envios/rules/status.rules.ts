@@ -1,6 +1,7 @@
 import { Injectable } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
 import ENV_VARIABLE_NAMES from "../../../utils/env_variable_names";
+import { AppConfigService } from "../../app-config/services/app-config.service";
 
 export enum StatusEnvio {
     RASCUNHO = "RASCUNHO",
@@ -104,33 +105,37 @@ const DEFAULT_STATUS_RULE: StatusRule = {
     next: StatusEnvio.RASCUNHO,
 };
 
+export const SEPARACAO_NOTIFY_EMAILS_KEY = "separacao_notify_emails";
+
 @Injectable()
 export class StatusRulesService {
-    private readonly statusRules: Record<StatusEnvio, StatusRule>;
-
-    constructor(private readonly configService: ConfigService) {
-        const raw = this.configService.get<string>(
-            ENV_VARIABLE_NAMES.SEPARACAO_NOTIFY_EMAILS,
-        );
-        const notify = raw
-            ? raw.split(",").map((e) => e.trim()).filter(Boolean)
-            : [];
-
-        this.statusRules = {
-            ...STATUS_RULES,
-            [StatusEnvio.SEPARACAO]: {
-                ...STATUS_RULES[StatusEnvio.SEPARACAO],
-                notify,
-            },
-        };
-    }
+    constructor(
+        private readonly configService: ConfigService,
+        private readonly appConfigService: AppConfigService,
+    ) {}
 
     getAllRules(): StatusRule[] {
-        return Object.values(this.statusRules);
+        return Object.values(STATUS_RULES);
     }
 
     getStatus(status?: StatusEnvio): StatusRule {
         if (!status) return DEFAULT_STATUS_RULE;
-        return this.statusRules[status] ?? DEFAULT_STATUS_RULE;
+        return STATUS_RULES[status] ?? DEFAULT_STATUS_RULE;
+    }
+
+    /** Returns SEPARACAO notify emails: DB value takes precedence over env var. */
+    async getSeparacaoNotifyEmails(): Promise<string[]> {
+        const dbValue = await this.appConfigService.get(SEPARACAO_NOTIFY_EMAILS_KEY);
+        if (dbValue !== null) {
+            return dbValue.split(",").map((e) => e.trim()).filter(Boolean);
+        }
+        const envValue = this.configService.get<string>(ENV_VARIABLE_NAMES.SEPARACAO_NOTIFY_EMAILS);
+        return envValue
+            ? envValue.split(",").map((e) => e.trim()).filter(Boolean)
+            : [];
+    }
+
+    async setSeparacaoNotifyEmails(emails: string[]): Promise<void> {
+        await this.appConfigService.set(SEPARACAO_NOTIFY_EMAILS_KEY, emails.join(","));
     }
 }

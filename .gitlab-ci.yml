@@ -39,10 +39,28 @@ run:migrations:qa:
       fi
   environment: qas
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "qas-master" || $CI_COMMIT_BRANCH == "master"'
       when: on_success
-    - if: '$CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH'
       when: manual
+
+clear:migrations:qa:
+  stage: deploy
+  image: node:$NODE_VERSION
+  variables:
+    NODE_ENV: quality
+  script:
+    - npm ci --include=dev
+    - |
+      echo "⚠️  CLEARING QAS MIGRATION TABLE"
+      echo "This removes fake migrations that were marked complete but never executed"
+      npm run typeorm -- query "TRUNCATE TABLE migrations;"
+      echo "✓ Migration table cleared. Run run:migrations:qa next to properly create all tables"
+  environment: qas
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "qas-master" || $CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH'
+      when: manual
+      allow_failure: true
 
 clear:migrations:prd:
   stage: deploy
@@ -98,11 +116,11 @@ run:migrations:prd:
 deploy:qa:
   environment: qas
   rules:
-    - if: '$CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "qas-master" || $CI_COMMIT_BRANCH == "master"'
       when: on_success
       needs:
         - run:migrations:qa
-    - if: '$CI_COMMIT_BRANCH != "master" && $CI_COMMIT_BRANCH'
+    - if: '$CI_COMMIT_BRANCH'
       when: manual
       needs:
         - run:migrations:qa
