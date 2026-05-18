@@ -39,7 +39,7 @@ run:migrations:qa:
       fi
   environment: qas
   rules:
-    - if: '$CI_COMMIT_BRANCH == "qas-master" || $CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "qas-master"'
       when: on_success
     - if: '$CI_COMMIT_BRANCH'
       when: manual
@@ -116,7 +116,7 @@ run:migrations:prd:
 deploy:qa:
   environment: qas
   rules:
-    - if: '$CI_COMMIT_BRANCH == "qas-master" || $CI_COMMIT_BRANCH == "master"'
+    - if: '$CI_COMMIT_BRANCH == "qas-master"'
       when: on_success
       needs:
         - run:migrations:qa
