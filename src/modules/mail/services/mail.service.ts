@@ -87,27 +87,27 @@ class MailService implements IMailService {
         userToken: string,
         text?: string,
         cc?: string[],
+        bcc?: string[],
     ): Promise<void> {
         try {
             const sender = userEmail;
-            const mailFrom = this.configService.getOrThrow(
-                ENV_VARIABLE_NAMES.MAIL_USERNAME,
-            );
             const toArray = Array.isArray(to) ? to : [to];
-            const ccList = [sender, ...(cc ?? [])].filter(Boolean);
+            const ccList = [...(cc ?? [])].filter(Boolean);
+            const bccList = (bcc ?? []).filter(Boolean);
 
             console.log(
                 "Sending mail from host: %s",
                 this.configService.getOrThrow(ENV_VARIABLE_NAMES.MAIL_HOST),
             );
-            console.log("Sending mail from user: %s", mailFrom);
             console.log("Sending mail as %s", sender);
             console.log("Sending mail to %s", toArray.join(", "));
             console.log("Sending mail cc %s", ccList.join(", "));
+            if (bccList.length) console.log("Sending mail bcc %s", bccList.join(", "));
 
             const info = await this.transporter.sendMail({
-                from: mailFrom,
+                from: sender,
                 cc: ccList,
+                bcc: bccList.length ? bccList : undefined,
                 to,
                 subject,
                 html,
@@ -160,10 +160,12 @@ class MailService implements IMailService {
         const e = (v: string | null | undefined) => this.esc(v);
         const fmtBool = (v: boolean | null | undefined) =>
             v === true ? "SIM" : v === false ? "NÃO" : "—";
-        const fmtCurrency = (v: number | null | undefined) =>
-            v != null
-                ? `R$ ${v.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
-                : "—";
+        const fmtCurrency = (v: number | null | undefined, moeda?: string | null) => {
+            if (v == null) return "—";
+            const symbol = moeda === "USD" ? "USD" : moeda === "EUR" ? "EUR" : "R$";
+            const locale = moeda === "USD" || moeda === "EUR" ? "en-US" : "pt-BR";
+            return `${symbol} ${v.toLocaleString(locale, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        };
         const isSistemas = projeto.secao === "Sistemas" || projeto.secao === "Acionamentos";
         const isSolar = projeto.secao === "Solar";
 
@@ -185,7 +187,7 @@ class MailService implements IMailService {
         if (isSistemas) rows.push(row("Data Primeiro Envio", this.fmtDate(projeto.data_primeiro_envio)));
         if (isSistemas) rows.push(row("OV (ZVGP)", e(projeto.zvgp)));
         if (isSistemas) rows.push(row("Pedido de Compra", e(projeto.ordem_pedido_compra)));
-        if (isSistemas) rows.push(row("Valor Total Líquido", fmtCurrency(projeto.valor_total_liq)));
+        if (isSistemas) rows.push(row("Valor Total Líquido", fmtCurrency(projeto.valor_total_liq, projeto.moeda_total_liq)));
 
         rows.push(sectionTitle("Financeiro / Qualidade"));
         rows.push(row("Claim", e(projeto.claim)));
@@ -327,23 +329,25 @@ class MailService implements IMailService {
             ].join("\n");
         } else {
             body = [
-                p("Prezado Cliente"),
+                p("<strong>Prezado Cliente,</strong>"),
                 br,
-                p(`Agradecendo a colocação do seu pedido OC nº ${this.esc(projeto.ordem_pedido_compra)} - nosso PEP ${this.esc(projeto.pep_prefix)} / OV nº ${this.esc(projeto.zvgp)}, informamos os dados do administrador do seu contrato:`),
+                p(`Agradecemos pela colocação do seu pedido, conforme OC nº ${this.esc(projeto.ordem_pedido_compra)} – nosso PEP nº ${this.esc(projeto.pep_prefix)} / OV nº ${this.esc(projeto.zvgp)}.`),
                 br,
-                bullet("Ref. Interna: PEP Nº", `${projeto.pep_prefix} / OV nº ${projeto.zvgp}`),
+                p("Informamos abaixo os dados do administrador do seu contrato:"),
+                br,
+                bullet("Referência Interna:", `PEP nº ${projeto.pep_prefix} / OV nº ${projeto.zvgp}`),
                 bullet("Nome:", projeto.pm ?? ""),
                 bulletEmail("E-mail:", pmEmail),
                 br,
-                p(`Deste momento em diante nosso colega ${this.esc(projeto.pm)} torna-se o principal interlocutor dos senhores para qualquer assunto técnico e/ou comercial relacionado com seu pedido. Sua missão maior é facilitar a fabricação do seu pedido, interagindo com sua empresa e com todas as áreas necessárias da WEG, contribuindo de forma decisiva para que o fornecimento ocorra dentro do prazo esperado.`),
+                p(`A partir deste momento, o colaborador ${this.esc(projeto.pm)} será o principal interlocutor para todos os assuntos técnicos e/ou comerciais relacionados ao seu pedido. Sua principal responsabilidade será acompanhar e facilitar o processo de fabricação, atuando de forma integrada com sua empresa e com as diversas áreas da WEG, visando garantir o cumprimento dos prazos estabelecidos.`),
                 br,
-                p("Para facilitar os contatos sugerimos que os senhores utilizem nossa referência interna acima informada em suas comunicações conosco."),
+                p("Para maior agilidade no atendimento, solicitamos a gentileza de sempre informar a referência interna acima mencionada em suas comunicações conosco."),
                 br,
-                p("Eventualmente, caso julgue necessário, também poderemos ser diretamente contatados."),
+                p("Permanecemos à disposição para quaisquer esclarecimentos adicionais e, caso necessário, também poderemos ser contatados diretamente."),
                 br,
-                p("Novamente agradecemos seu pedido e colocamo-nos ao seu inteiro dispor."),
+                p("Reiteramos nossos agradecimentos pela confiança e colocamo-nos à inteira disposição."),
                 br,
-                p("Cordialmente,"),
+                p("<strong>Cordialmente,</strong>"),
                 br,
                 `<p style="margin:0;font-family:Calibri,sans-serif;font-size:11pt;"><strong>Fabio de Souza</strong><br><strong>Chefe da Seção Gerenciamento de Projetos e Contratos – Sistemas</strong><br><strong>Fone: +55 (47) 3276-6700</strong><br><strong>WEG Automação &amp; Sistemas</strong></p>`,
                 br,

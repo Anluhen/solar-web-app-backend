@@ -110,6 +110,7 @@ class ProjetosService implements IProjetosService {
             data_primeiro_envio: dto.data_primeiro_envio ?? null,
             ordem_pedido_compra: dto.ordem_pedido_compra ?? null,
             valor_total_liq: dto.valor_total_liq ?? null,
+            moeda_total_liq: dto.moeda_total_liq ?? "BRL",
             ml: dto.ml ?? null,
             is_cpc47: dto.is_cpc47 ?? null,
             claim: dto.claim ?? null,
@@ -383,6 +384,7 @@ class ProjetosService implements IProjetosService {
             data_primeiro_envio: anchor.data_primeiro_envio,
             ordem_pedido_compra: anchor.ordem_pedido_compra,
             valor_total_liq: anchor.valor_total_liq,
+            moeda_total_liq: anchor.moeda_total_liq,
             claim: anchor.claim,
             data_claim: anchor.data_claim,
             observacoes_admin: anchor.observacoes_admin,
@@ -437,6 +439,7 @@ class ProjetosService implements IProjetosService {
             ...(dto.data_primeiro_envio !== undefined && { data_primeiro_envio: dto.data_primeiro_envio }),
             ...(dto.ordem_pedido_compra !== undefined && { ordem_pedido_compra: dto.ordem_pedido_compra }),
             ...(dto.valor_total_liq !== undefined && { valor_total_liq: dto.valor_total_liq }),
+            ...(dto.moeda_total_liq !== undefined && { moeda_total_liq: dto.moeda_total_liq }),
             ...(dto.claim !== undefined && { claim: dto.claim }),
             ...(dto.data_claim !== undefined && { data_claim: dto.data_claim }),
             ...(dto.custos_ipex !== undefined && { custos_ipex: dto.custos_ipex }),
@@ -1026,20 +1029,7 @@ class ProjetosService implements IProjetosService {
             : `TESTE - [WAU] Projeto pronto para envio de e-mail — ${projeto.zvgp} ${projeto.cliente} ${projeto.pep_prefix}`;
 
         const link = `${process.env.FRONTEND_URL ?? "http://localhost:3000"}/projetos/${projeto.id}`;
-        const html = this.mailService.buildInternalEmail({
-            title: "Projeto aprovado — enviar e-mail ao cliente",
-            lines: [
-                `PEP: ${projeto.pep_prefix}`,
-                `OV: ${projeto.zvgp}`,
-                `Cliente: ${projeto.cliente ?? "—"}`,
-                `PM: ${projeto.pm ?? "—"}`,
-                `Seção: ${projeto.secao ?? "—"}`,
-            ],
-            ctaLabel: "Abrir projeto",
-            ctaLink: link,
-            isProd,
-            prodRecipients,
-        });
+        const html = this.mailService.buildProjetoDetailsEmail(projeto, link, isProd, prodRecipients);
 
         await this.mailService.sendMail(toList, subject, html, userEmail, userToken);
     }
@@ -1053,9 +1043,10 @@ class ProjetosService implements IProjetosService {
         userToken: string,
     ): Promise<void> {
         const projeto = await this.getProjeto(id);
-        const pmRecord = await this.peopleRepo.findOne({
-            where: { name: projeto.pm, position: "pm" },
-        });
+        const [pmRecord, wauBosses] = await Promise.all([
+            this.peopleRepo.findOne({ where: { name: projeto.pm, position: "pm" } }),
+            this.peopleRepo.find({ where: { secao: "wau", position: "boss" } }),
+        ]);
         const pmEmail = pmRecord?.email ?? "";
 
         const isProd = process.env.NODE_ENV === "production";
@@ -1073,12 +1064,23 @@ class ProjetosService implements IProjetosService {
             userEmail,
         ].filter(Boolean);
 
+        const bccEmails = wauBosses
+            .map((b) => b.email)
+            .filter((e): e is string => Boolean(e));
+
+        if (isProd && clientePara.length === 0) {
+            throw new BadRequestException(
+                "Campo \"Para — Cliente\" está vazio. Preencha o destinatário antes de enviar o e-mail.",
+            );
+        }
+
         const realTo = clientePara;
         const realCc = [...clienteCc, ...wegPara, ...wegCc];
 
         const toRecipients = isProd ? realTo : ["e-henchenski@weg.net"];
         const subject = isProd ? baseSubject : `TESTE - ${baseSubject}`;
         const ccRecipients = isProd ? realCc : [];
+        const bccRecipients = isProd ? bccEmails : [];
 
         const html = this.mailService.buildProjetoEmail(
             projeto, pmEmail, language, isProd,
@@ -1092,6 +1094,7 @@ class ProjetosService implements IProjetosService {
             userToken,
             undefined,
             ccRecipients,
+            bccRecipients,
         );
     }
 

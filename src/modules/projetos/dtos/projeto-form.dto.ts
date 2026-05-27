@@ -104,6 +104,11 @@ export default class ProjetoFormDto {
     @IsOptional()
     valor_total_liq?: number | null;
 
+    @ApiProperty({ required: false, nullable: true, description: "Moeda do Valor Total Líquido: BRL | USD | EUR" })
+    @IsString()
+    @IsOptional()
+    moeda_total_liq?: string | null;
+
     // ─── Shared ────────────────────────────────────────────────────────────────
 
     @ApiProperty({ required: false, nullable: true, type: Number })

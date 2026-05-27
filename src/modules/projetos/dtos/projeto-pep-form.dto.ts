@@ -75,6 +75,11 @@ export default class ProjetoPepFormDto {
     @IsOptional()
     valor_total_liq?: number | null;
 
+    @ApiProperty({ required: false, nullable: true, description: "Moeda do Valor Total Líquido: BRL | USD | EUR" })
+    @IsString()
+    @IsOptional()
+    moeda_total_liq?: string | null;
+
     @ApiProperty({ required: false, nullable: true })
     @IsString()
     @IsOptional()

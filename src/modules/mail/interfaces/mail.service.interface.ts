@@ -14,6 +14,7 @@ export interface ProjetoEmailData {
     zrgp?: string | null;
     ordem_pedido_compra?: string | null;
     valor_total_liq?: number | null;
+    moeda_total_liq?: string | null;
     claim?: string | null;
     data_claim?: string | null;
     ml?: number | null;
@@ -37,6 +38,7 @@ export abstract class IMailService {
         userToken: string,
         text?: string,
         cc?: string[],
+        bcc?: string[],
     ): Promise<void>;
 
     abstract buildProjetoDetailsEmail(

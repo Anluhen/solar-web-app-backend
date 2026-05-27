@@ -97,6 +97,10 @@ export default class Projeto {
     @Column({ type: "numeric", nullable: true })
     valor_total_liq?: number | null;
 
+    @ApiProperty({ required: false, nullable: true, description: "Moeda do Valor Total Líquido: BRL | USD | EUR" })
+    @Column({ type: "text", nullable: true, default: "BRL" })
+    moeda_total_liq?: string | null;
+
     // ─── Shared ────────────────────────────────────────────────────────────────
 
     @ApiProperty({ required: false, nullable: true, type: Number })
