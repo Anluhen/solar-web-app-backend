@@ -81,15 +81,6 @@ export class EnviosController {
         });
     }
 
-    @Put(":id")
-    @ApiOkResponse({ type: EnvioEntity })
-    async putEnvio(
-        @Param("id") id: string,
-        @Body() envio: EnvioFormDto,
-    ): Promise<EnvioEntity> {
-        return this.enviosService.putEnvio(id, envio);
-    }
-
     @Get("notify-emails")
     async getNotifyEmails(): Promise<{ emails: string[] }> {
         const emails = await this.statusRulesService.getSeparacaoNotifyEmails();
@@ -100,6 +91,15 @@ export class EnviosController {
     async setNotifyEmails(@Body() body: { emails: string[] }): Promise<{ emails: string[] }> {
         await this.statusRulesService.setSeparacaoNotifyEmails(body.emails ?? []);
         return { emails: body.emails ?? [] };
+    }
+
+    @Put(":id")
+    @ApiOkResponse({ type: EnvioEntity })
+    async putEnvio(
+        @Param("id") id: string,
+        @Body() envio: EnvioFormDto,
+    ): Promise<EnvioEntity> {
+        return this.enviosService.putEnvio(id, envio);
     }
 
     @Get("status")
