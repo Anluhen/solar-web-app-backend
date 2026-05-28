@@ -16,6 +16,7 @@ export type FormField =
     | "pep"
     | "zvgp"
     | "gerador"
+    | "secao"
     | "separacao"
     | "data_enviado"
     | "data_entregue"
@@ -46,6 +47,7 @@ export const STATUS_RULES: Record<StatusEnvio, StatusRule> = {
             "pep",
             "zvgp",
             "gerador",
+            "secao",
             "separacao",
             "observacoes",
             "materiaisTable",
@@ -98,6 +100,7 @@ const DEFAULT_STATUS_RULE: StatusRule = {
         "pep",
         "zvgp",
         "gerador",
+        "secao",
         "separacao",
         "observacoes",
         "materiaisTable",

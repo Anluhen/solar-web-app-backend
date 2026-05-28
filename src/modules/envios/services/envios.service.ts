@@ -3,7 +3,6 @@ import {
     ClassProvider,
     Inject,
     Injectable,
-    InternalServerErrorException,
     NotFoundException,
 } from "@nestjs/common";
 import { ConfigService } from "@nestjs/config";
@@ -426,10 +425,8 @@ class EnviosService implements IEnviosService {
                 userEmail,
                 userToken,
             );
-        } catch {
-            throw new InternalServerErrorException(
-                "Failed to send status change notification.",
-            );
+        } catch (err) {
+            console.error("Failed to send status change notification:", err);
         }
     }
 }

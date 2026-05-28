@@ -98,6 +98,10 @@ export default class Envio {
     @Column({ type: "date", nullable: true })
     previsao_chegada?: string | null;
 
+    @ApiProperty({ required: false, nullable: true, description: "Seção: Solar | Acionamentos | Sistemas" })
+    @Column({ type: "text", nullable: true })
+    secao?: string | null;
+
     @ApiProperty({
         required: false,
         type: () => [MaterialEntity],

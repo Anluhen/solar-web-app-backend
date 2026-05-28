@@ -58,6 +58,10 @@ export default class EnvioFormDto {
     @IsString()
     previsao_chegada?: string | null;
 
+    @IsOptional()
+    @IsString()
+    secao?: string | null;
+
     /** When true, skip email notification on status transition (for backfilling historical records) */
     @IsOptional()
     @IsBoolean()
