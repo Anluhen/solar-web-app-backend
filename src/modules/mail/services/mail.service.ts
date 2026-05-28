@@ -36,17 +36,6 @@ class MailService implements IMailService {
             host: configuredHost,
             port: configuredPort,
             secure: false,
-            auth: {
-                user: this.configService.getOrThrow(
-                    ENV_VARIABLE_NAMES.MAIL_USERNAME,
-                ),
-                pass: this.configService.getOrThrow(
-                    ENV_VARIABLE_NAMES.MAIL_PASSWORD,
-                ),
-            },
-            tls: {
-                rejectUnauthorized: false,
-            },
         };
 
         const testOptions = {
