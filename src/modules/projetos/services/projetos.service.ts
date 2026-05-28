@@ -947,16 +947,14 @@ class ProjetosService implements IProjetosService {
         const previous = projeto.workflow_status;
         projeto.workflow_status = dto.workflow_status;
         if (dto.pm !== undefined) projeto.pm = dto.pm;
-        await this.projetoRepo.save(projeto);
 
         if (previous === "RASCUNHO" && dto.workflow_status === "AGUARDANDO_GESTOR") {
-            await this.sendEtapa1Email(projeto, userEmail, userToken).catch(() => undefined);
+            await this.sendEtapa1Email(projeto, userEmail, userToken);
         } else if (previous === "AGUARDANDO_GESTOR" && dto.workflow_status === "ENVIO_EMAIL") {
-            const updated = await this.findProjeto(id);
-            await this.sendEtapa2Email(updated, userEmail, userToken).catch((err) => {
-                if (err instanceof BadRequestException) throw err;
-            });
+            await this.sendEtapa2Email(projeto, userEmail, userToken);
         }
+
+        await this.projetoRepo.save(projeto);
 
         return this.getProjeto(id);
     }
