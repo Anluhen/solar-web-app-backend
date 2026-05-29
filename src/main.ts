@@ -1,4 +1,5 @@
 import { NestFactory } from "@nestjs/core";
+import { ValidationPipe } from "@nestjs/common";
 import { AppModule } from "./app.module";
 import { DocumentBuilder, SwaggerModule } from "@nestjs/swagger";
 import { version } from "../package.json";
@@ -10,6 +11,7 @@ async function bootstrap() {
     const app = await NestFactory.create(AppModule);
 
     app.enableCors();
+    app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
 
     const configService = app.get<ConfigService>(ConfigService);
 

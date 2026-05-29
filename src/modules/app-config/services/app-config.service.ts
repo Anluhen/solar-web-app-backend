@@ -16,6 +16,6 @@ export class AppConfigService {
     }
 
     async set(key: string, value: string): Promise<void> {
-        await this.repo.save({ key, value });
+        await this.repo.upsert({ key, value }, ['key']);
     }
 }
